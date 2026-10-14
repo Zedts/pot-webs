@@ -22,38 +22,22 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return AuthStorage.getToken();
-    }
-    return null;
-  });
+  // Always initialize synchronously to identical SSR defaults to prevent hydration mismatch
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserModel | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const [user, setUser] = useState<UserModel | null>(() => {
-    if (typeof window !== "undefined") {
-      return AuthStorage.getUser();
-    }
-    return null;
-  });
-
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const savedToken = AuthStorage.getToken();
-      const savedUser = AuthStorage.getUser();
-      // If we already have a cached token and user profile, or no token, we are immediately ready
-      if ((savedToken && savedUser) || !savedToken) {
-        return false;
-      }
-    }
-    return false;
-  });
-
-  // Verify and keep profile fresh on mount
+  // Restore session from client storage and verify profile after mount (zero SSR divergence)
   useEffect(() => {
     const savedToken = AuthStorage.getToken();
     const savedUser = AuthStorage.getUser();
 
     if (savedToken) {
+      setToken(savedToken);
+      if (savedUser) {
+        setUser(savedUser);
+      }
+
       // Background re-verification
       authService
         .getProfile()
@@ -72,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .finally(() => {
           setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 

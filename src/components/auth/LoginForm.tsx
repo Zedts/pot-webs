@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/Button";
 import { GoogleLoginBtn } from "@/components/auth/GoogleLoginBtn";
 import { showToast } from "@/lib/toast";
 import { getUserDisplayName } from "@/types/user";
+import { HugeIcon } from "@/components/ui/HugeIcon";
+import { Mail01Icon, LockPasswordIcon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 
 export function LoginForm() {
   const router = useRouter();
@@ -34,8 +36,7 @@ export function LoginForm() {
     if (result) {
       const name = getUserDisplayName(result.user);
       showToast.success(`Selamat datang kembali, ${name}! Presensi aktif.`);
-      router.push("/home");
-
+      router.push("/dashboard");
     }
   };
 
@@ -44,7 +45,7 @@ export function LoginForm() {
     if (result) {
       const name = getUserDisplayName(result.user);
       showToast.success(`Selamat datang kembali, ${name}! Presensi aktif.`);
-      router.push("/home");
+      router.push("/dashboard");
     }
   };
 
@@ -52,7 +53,7 @@ export function LoginForm() {
     <section className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-between bg-white">
       {/* Top Brand Taglet */}
       <div className="flex items-center space-x-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[#A81B1B] flex items-center justify-center text-white font-extrabold text-xs shadow-sm">
+        <div className="w-8 h-8 rounded-lg bg-[#A81B1B] flex items-center justify-center text-white font-extrabold text-xs shadow-xs">
           POT
         </div>
         <span className="text-xs font-bold text-[#1A1A1A] tracking-wider uppercase">PORTAL MASUK</span>
@@ -73,13 +74,7 @@ export function LoginForm() {
         {/* General API Error Banner */}
         {generalError && (
           <div className="mb-4 p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#B91C1C] text-xs font-medium flex items-center space-x-2 animate-in fade-in">
-            <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <HugeIcon icon={AlertCircleIcon} size={18} strokeWidth={2} className="shrink-0" />
             <span>{generalError}</span>
           </div>
         )}
@@ -87,21 +82,17 @@ export function LoginForm() {
         {/* Form */}
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <FormInput
-            label="Email"
+            label="Email atau Username"
             id="identifierField"
             name="identifier"
             type="text"
             required
             autoComplete="username"
-            placeholder="Masukan Email"
+            placeholder="Masukan Email atau Username"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             error={identifierError}
-            leadingIcon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            }
+            leadingIcon={<HugeIcon icon={Mail01Icon} size={18} strokeWidth={1.8} />}
           />
 
           <FormInput
@@ -115,13 +106,7 @@ export function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={passwordError}
-            leadingIcon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-                <rect x="5" y="11" width="14" height="10" rx="2.5" />
-                <path d="M8 11V7a4 4 0 0 1 8 0v4" strokeLinecap="round" />
-                <circle cx="12" cy="16" r="1.2" fill="currentColor" />
-              </svg>
-            }
+            leadingIcon={<HugeIcon icon={LockPasswordIcon} size={18} strokeWidth={1.8} />}
           />
 
           {/* Remember Me & Link to Register */}
@@ -163,7 +148,7 @@ export function LoginForm() {
 
       {/* Footer */}
       <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-        <p>© POT - Oleh-Oleh Turki</p>
+        <p>Ac POT - Oleh-Oleh Turki</p>
       </div>
     </section>
   );

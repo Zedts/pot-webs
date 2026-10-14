@@ -1,4 +1,4 @@
-﻿import { UserModel } from "@/types/user";
+import { UserModel } from "@/types/user";
 
 const TOKEN_KEY = "pot_token";
 const USER_KEY = "pot_user";
@@ -25,6 +25,7 @@ export class AuthStorage {
 
   /**
    * Persists the JWT token to both localStorage and document.cookie.
+   * Cookie is required for Next.js edge middleware routing.
    */
   static saveToken(token: string): void {
     if (typeof window === "undefined") return;
@@ -44,7 +45,8 @@ export class AuthStorage {
   }
 
   /**
-   * Retrieves the cached UserModel profile from localStorage or document.cookie.
+   * Retrieves the cached UserModel profile from localStorage.
+   * Includes one-time migration fallback for legacy pot_user cookies.
    */
   static getUser(): UserModel | null {
     if (typeof window === "undefined") return null;
@@ -53,16 +55,23 @@ export class AuthStorage {
       const userJson = localStorage.getItem(USER_KEY);
       if (userJson) return JSON.parse(userJson) as UserModel;
 
-      // Fallback: check cookie
+      // Graceful migration fallback: check legacy cookie once, migrate to localStorage, and clear cookie
       const match = document.cookie.match(new RegExp(`(^|;\\s*)(${USER_KEY})=([^;]*)`));
-      return match ? (JSON.parse(decodeURIComponent(match[3])) as UserModel) : null;
+      if (match) {
+        const parsed = JSON.parse(decodeURIComponent(match[3])) as UserModel;
+        localStorage.setItem(USER_KEY, JSON.stringify(parsed));
+        document.cookie = `${USER_KEY}=; path=/; max-age=0; SameSite=Lax`;
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
   }
 
   /**
-   * Persists the UserModel profile to localStorage and document.cookie.
+   * Persists the UserModel profile strictly to localStorage.
+   * Plaintext PII is omitted from request cookies.
    */
   static saveUser(user: UserModel): void {
     if (typeof window === "undefined") return;
@@ -71,12 +80,8 @@ export class AuthStorage {
       const serialized = JSON.stringify(user);
       localStorage.setItem(USER_KEY, serialized);
 
-      // Persist cookie with 30-day expiry
-      const isSecure = window.location.protocol === "https:";
-      const cookieStr = `${USER_KEY}=${encodeURIComponent(serialized)}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${
-        isSecure ? "; Secure" : ""
-      }`;
-      document.cookie = cookieStr;
+      // Ensure any legacy pot_user cookie is cleaned up
+      document.cookie = `${USER_KEY}=; path=/; max-age=0; SameSite=Lax`;
     } catch (e) {
       console.warn("[AuthStorage] Failed to save user:", e);
     }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import { useAuth } from "./useAuth";
@@ -116,7 +116,7 @@ export function useRegisterForm() {
         setIsLoading(false);
       }
     },
-    [nama, username, email, phone, password, validate, register]
+    [nama, username, email, phone, password, confirmPassword, validate, register]
   );
 
   const handleGoogleRegister = useCallback(async (): Promise<AuthResponse | null> => {

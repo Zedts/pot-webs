@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
   // 1. Root route '/'
   if (pathname === "/") {
     if (token) {
-      return NextResponse.redirect(new URL("/home", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -17,12 +17,17 @@ export function proxy(request: NextRequest) {
   // 2. Auth routes: '/login' and '/register'
   if (pathname === "/login" || pathname === "/register") {
     if (token) {
-      return NextResponse.redirect(new URL("/home", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 
-  // 3. Protected routes: '/home' and its sub-paths
-  if (pathname.startsWith("/home")) {
+  // 3. Legacy '/home' route redirect
+  if (pathname === "/home" || pathname.startsWith("/home/")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // 4. Protected routes: '/dashboard'
+  if (pathname.startsWith("/dashboard")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -32,5 +37,13 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/register", "/home", "/home/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/register",
+    "/home",
+    "/home/:path*",
+    "/dashboard",
+    "/dashboard/:path*",
+  ],
 };

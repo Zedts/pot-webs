@@ -14,4 +14,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Prefer the current documented pattern; do not use deprecated or legacy APIs unless required by existing code.
 - Do not add caching without a clear purpose, scope, invalidation strategy, and confirmation that it is safe for user-specific data.
 
+## Rendering and prerender rules
+
+- During the initial render, UI must be deterministic and identical between server prerender and client hydration.
+- Do not read or compute unstable, browser-only, environment-specific, or per-render values during render.
+- If a value is required for the first paint and may change per visit, isolate it behind an appropriate streaming/suspense boundary with a stable fallback.
+- If a value is not required for the first paint, defer it until after mount or compute it in an event handler.
+- If a value is only used for timing or telemetry, use an appropriate timing API instead of rendering it.
+- Keep HTML nesting valid.
+- Do not suppress or work around prerender or hydration validation errors without fixing the underlying non-deterministic render dependency.
+
 <!-- END:nextjs-agent-rules -->

@@ -14,6 +14,7 @@ export interface UserModel {
   email: string;
   role: UserRole;
   lapak_id?: string | null;
+  shift?: 'pagi' | 'siang' | null;
   no_hp: string;
   status: string;
   authProvider: string;
@@ -42,4 +43,10 @@ export function getUserInitials(user?: UserModel | null): string {
 
 export function isUserActive(user?: UserModel | null): boolean {
   return user?.status?.toLowerCase() === 'active';
+}
+
+export function isAdminOrOwner(user?: UserModel | null): boolean {
+  if (!user || !user.role) return false;
+  const normalized = user.role.toLowerCase().trim();
+  return normalized === 'admin' || normalized === 'owner';
 }

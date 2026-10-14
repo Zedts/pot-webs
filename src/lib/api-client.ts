@@ -1,4 +1,4 @@
-﻿import { ApiResponse, ApiError } from "@/types/api";
+import { ApiResponse, ApiError } from "@/types/api";
 import { AuthStorage } from "./auth-storage";
 
 interface RequestOptions extends RequestInit {
@@ -19,7 +19,12 @@ export class ApiClient {
     this.baseUrl = url;
   }
 
-  private mapUserMessage(statusCode: number, rawMessage: string, errors?: string[]): string {
+  private mapUserMessage(
+    statusCode: number,
+    rawMessage: string,
+    errors?: string[],
+    requiresAuth?: boolean
+  ): string {
     if (errors && errors.length > 0) {
       return errors[0];
     }
@@ -28,8 +33,12 @@ export class ApiClient {
       return rawMessage || "Permintaan tidak valid.";
     }
     if (statusCode === 401) {
-      if (rawMessage.toLowerCase().includes("inactive")) {
+      if (rawMessage && rawMessage.toLowerCase().includes("inactive")) {
         return "Akun Anda dinonaktifkan. Silakan hubungi admin HRD.";
+      }
+      if (requiresAuth) {
+        AuthStorage.clear();
+        return "Sesi Anda telah kedaluwarsa. Silakan masuk kembali.";
       }
       return "Email, username, atau password salah.";
     }
@@ -85,7 +94,12 @@ export class ApiClient {
       }
 
       if (!response.ok) {
-        const userMsg = this.mapUserMessage(response.status, json.message, json.errors);
+        const userMsg = this.mapUserMessage(
+          response.status,
+          json.message,
+          json.errors,
+          requiresAuth
+        );
         throw new ApiError(response.status, json.message || "Request failed", json.errors, userMsg);
       }
 
