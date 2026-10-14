@@ -3,6 +3,7 @@ import { AuthStorage } from "@/lib/auth-storage";
 import { Validators } from "@/lib/validators";
 import { AuthResponse, LoginPayload, RegisterPayload } from "@/types/auth";
 import { UserModel } from "@/types/user";
+import { ApiEndpoints } from "@/constants/api_endpoints";
 import { GoogleAuthService } from "./google-auth.service";
 
 export class AuthService {
@@ -25,7 +26,7 @@ export class AuthService {
       body.username = identifier.trim();
     }
 
-    const response = await apiClient.post<AuthResponse>("/auth/login", body, {
+    const response = await apiClient.post<AuthResponse>(ApiEndpoints.auth.login, body, {
       requiresAuth: false,
     });
 
@@ -55,7 +56,7 @@ export class AuthService {
       body.no_hp = payload.no_hp.trim();
     }
 
-    const response = await apiClient.post<AuthResponse>("/auth/register", body, {
+    const response = await apiClient.post<AuthResponse>(ApiEndpoints.auth.register, body, {
       requiresAuth: false,
     });
 
@@ -75,7 +76,7 @@ export class AuthService {
    */
   async loginWithGoogle(idToken: string): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>(
-      "/auth/google",
+      ApiEndpoints.auth.googleLogin,
       { idToken },
       { requiresAuth: false }
     );
@@ -95,7 +96,7 @@ export class AuthService {
    * Retrieves profile of currently authenticated user.
    */
   async getProfile(): Promise<UserModel> {
-    const response = await apiClient.get<UserModel>("/auth/me", {
+    const response = await apiClient.get<UserModel>(ApiEndpoints.auth.me, {
       requiresAuth: true,
     });
 
