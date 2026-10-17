@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
@@ -26,8 +26,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 4. Protected routes: '/dashboard'
-  if (pathname.startsWith("/dashboard")) {
+  // 4. Protected routes: '/dashboard' and '/pengiriman'
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/pengiriman")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -45,5 +45,7 @@ export const config = {
     "/home/:path*",
     "/dashboard",
     "/dashboard/:path*",
+    "/pengiriman",
+    "/pengiriman/:path*",
   ],
 };

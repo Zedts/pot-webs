@@ -9,6 +9,8 @@
   absensi: "/absensi",
   penjualan: "/penjualan",
   pengiriman: "/pengiriman",
+  penerimaan: "/penerimaan",
+  produk: "/produk",
   stokLapak: "/stok-lapak",
   closing: "/closing",
 } as const;

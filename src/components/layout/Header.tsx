@@ -15,6 +15,9 @@ export function Header() {
   const { user, isLoading } = useAuth();
   const showAdminControls = !isLoading && isAdminOrOwner(user);
   const showSearchBar = showAdminControls && (pathname === "/dashboard" || pathname === "/");
+  const isFormPage = Boolean(
+    pathname && /^\/pengiriman\/(tambah|[^/]+\/edit)$/.test(pathname)
+  );
 
   return (
     <header className="h-16 bg-white border-b border-[#F3E7D8] px-4 md:px-8 flex items-center justify-between shrink-0 shadow-2xs z-30">
@@ -50,7 +53,7 @@ export function Header() {
       {/* Right: Shift Selector, Notifications & User Profile */}
       <div className="flex items-center space-x-2.5 sm:space-x-4">
         {/* Operational Shift Selector (Admin Only) */}
-        {showAdminControls && (
+        {showAdminControls && !isFormPage && (
           <div className="hidden sm:block">
             <ShiftSelector />
           </div>
