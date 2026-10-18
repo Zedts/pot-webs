@@ -19,7 +19,6 @@ import {
   Time04Icon,
   Money03Icon,
   Analytics01Icon,
-  DatabaseIcon,
   Settings02Icon,
   Logout01Icon,
   Profile,
