@@ -18,7 +18,6 @@ import {
   Invoice01Icon,
   Time04Icon,
   Money03Icon,
-  Analytics01Icon,
   Settings02Icon,
   Logout01Icon,
   Profile,
@@ -35,11 +34,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: DashboardSquare01Icon },
   { label: "Pengiriman", href: "/pengiriman", icon: DeliveryTruck01Icon },
   { label: "Stok Lapak Produk", href: "/slp", icon: PackageIcon },
+  { label: "User Management", href: "/user-management", icon: Profile, adminOnly: true },
   { label: "Penjualan", href: "/penjualan", icon: Invoice01Icon },
   { label: "Absensi", href: "/absensi", icon: Time04Icon },
   { label: "Payroll", href: "/payroll", icon: Money03Icon, adminOnly: true },
-  { label: "Laporan", href: "/laporan", icon: Analytics01Icon, adminOnly: true },
-  { label: "User Management", href: "/master-data", icon: Profile, adminOnly: true },
   { label: "Pengaturan", href: "/pengaturan", icon: Settings02Icon },
 ];
 
