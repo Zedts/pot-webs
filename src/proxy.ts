@@ -26,11 +26,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 4. Protected routes: '/dashboard', '/pengiriman', and '/slp'
+  // 4. Protected routes: '/dashboard', '/pengiriman', '/slp', and '/user-management'
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/pengiriman") ||
-    pathname.startsWith("/slp")
+    pathname.startsWith("/slp") ||
+    pathname.startsWith("/user-management")
   ) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -53,5 +54,7 @@ export const config = {
     "/pengiriman/:path*",
     "/slp",
     "/slp/:path*",
+    "/user-management",
+    "/user-management/:path*",
   ],
 };

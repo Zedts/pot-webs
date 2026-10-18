@@ -50,3 +50,32 @@ export function isAdminOrOwner(user?: UserModel | null): boolean {
   const normalized = user.role.toLowerCase().trim();
   return normalized === 'admin' || normalized === 'owner';
 }
+
+export interface UpdateUserPayload {
+  nama?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  lapak_id?: string | null;
+  shift?: string | null;
+  no_hp?: string;
+  password?: string;
+  status?: string;
+}
+
+export interface UserSummaryMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  unassignedRolesCount: number;
+  noLapakCount: number;
+  noShiftCount: number;
+}
+
+export interface UserFilterState {
+  searchTerm: string;
+  role: string;
+  shift: string;
+  lapakId: string;
+  status: string;
+}

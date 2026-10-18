@@ -141,3 +141,31 @@ export function formatRupiah(value: number | string | null | undefined): string 
   if (isNaN(num)) return "Rp 0";
   return `Rp ${new Intl.NumberFormat("id-ID").format(num)}`;
 }
+
+/**
+ * Formats operational shift hours according to the assigned Lapak's configured bounds.
+ * Falls back to system standard default hours (08:00 - 16:00 for Pagi, 13:00 - 21:00 for Siang).
+ * Optionally appends " WIB" timezone indicator (defaults to true).
+ */
+export function formatLapakShiftHours(
+  shift: ShiftType | string | null | undefined,
+  lapak?: { shift_pagi?: [string, string] | null; shift_siang?: [string, string] | null } | null,
+  withWib: boolean = true
+): string {
+  if (!shift) return "";
+  const normalized = shift.toLowerCase().trim();
+  const suffix = withWib ? " WIB" : "";
+  if (normalized === "pagi") {
+    if (lapak?.shift_pagi && Array.isArray(lapak.shift_pagi) && lapak.shift_pagi.length === 2) {
+      return `${lapak.shift_pagi[0]} - ${lapak.shift_pagi[1]}${suffix}`;
+    }
+    return `08:00 - 16:00${suffix}`;
+  }
+  if (normalized === "siang") {
+    if (lapak?.shift_siang && Array.isArray(lapak.shift_siang) && lapak.shift_siang.length === 2) {
+      return `${lapak.shift_siang[0]} - ${lapak.shift_siang[1]}${suffix}`;
+    }
+    return `13:00 - 21:00${suffix}`;
+  }
+  return "";
+}
