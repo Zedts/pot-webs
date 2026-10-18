@@ -22,6 +22,7 @@ import {
   DatabaseIcon,
   Settings02Icon,
   Logout01Icon,
+  Profile,
 } from "@hugeicons/core-free-icons";
 
 interface NavItem {
@@ -39,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Absensi", href: "/absensi", icon: Time04Icon },
   { label: "Payroll", href: "/payroll", icon: Money03Icon, adminOnly: true },
   { label: "Laporan", href: "/laporan", icon: Analytics01Icon, adminOnly: true },
-  { label: "Master Data", href: "/master-data", icon: DatabaseIcon, adminOnly: true },
+  { label: "User Management", href: "/master-data", icon: Profile, adminOnly: true },
   { label: "Pengaturan", href: "/pengaturan", icon: Settings02Icon },
 ];
 
