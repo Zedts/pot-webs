@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { PengirimanTableRow } from "@/types/pengiriman";
+import { formatJakartaDate, formatJakartaTime } from "@/utils/shift.utils";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   DeliveryTruck01Icon,
-  ViewIcon,
   CheckmarkCircle02Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 
 interface KonfirmasiPengirimanTableProps {
@@ -17,6 +16,8 @@ interface KonfirmasiPengirimanTableProps {
   isLoading: boolean;
   onConfirm: (id: string) => Promise<void>;
   isConfirming?: boolean;
+  onViewDetail?: (row: PengirimanTableRow) => void;
+  onCreateNew?: () => void;
 }
 
 export function KonfirmasiPengirimanTable({
@@ -24,8 +25,9 @@ export function KonfirmasiPengirimanTable({
   isLoading,
   onConfirm,
   isConfirming = false,
+  onViewDetail,
+  onCreateNew,
 }: KonfirmasiPengirimanTableProps) {
-  const router = useRouter();
   const [selectedRow, setSelectedRow] = useState<PengirimanTableRow | null>(null);
 
   const handleOpenConfirm = (row: PengirimanTableRow) => {
@@ -49,11 +51,11 @@ export function KonfirmasiPengirimanTable({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-[#F3E7D8] overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#F3E7D8] shadow-sm overflow-hidden">
       {/* Section Header */}
-      <div className="p-5 md:px-7 md:py-6 border-b border-[#F3E7D8] flex items-center justify-between">
+      <div className="p-5 md:px-6 md:py-5 border-b border-[#F3E7D8] flex items-center justify-between">
         <div>
-          <h2 className="text-lg md:text-xl font-bold text-[#18314E] tracking-tight">
+          <h2 className="text-base md:text-lg font-bold text-[#18314E] tracking-tight">
             Antrian Konfirmasi Keberangkatan
           </h2>
           <p className="text-xs text-[#6B7280] mt-0.5">
@@ -69,30 +71,30 @@ export function KonfirmasiPengirimanTable({
 
       {/* Table Content */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-[#EFF4F9] text-[#475569] text-xs font-semibold tracking-wide border-b border-[#F3E7D8]">
-              <th scope="col" className="py-3.5 px-6 font-bold">No. DO</th>
-              <th scope="col" className="py-3.5 px-6 font-bold">Tujuan Lapak</th>
-              <th scope="col" className="py-3.5 px-6 font-bold">Penerima (SPG)</th>
-              <th scope="col" className="py-3.5 px-6 font-bold">Waktu Dibuat</th>
-              <th scope="col" className="py-3.5 px-6 font-bold">Total Muatan</th>
-              <th scope="col" className="py-3.5 px-6 font-bold">Status</th>
-              <th scope="col" className="py-3.5 px-6 font-bold text-center">Aksi Pelepasan</th>
+        <table className="w-full text-left text-sm text-slate-700">
+          <thead className="bg-[#18314E] text-white text-xs uppercase tracking-wider font-semibold">
+            <tr>
+              <th scope="col" className="px-5 py-3.5">No. DO</th>
+              <th scope="col" className="px-5 py-3.5">Tujuan Lapak</th>
+              <th scope="col" className="px-5 py-3.5">Penerima (SPG)</th>
+              <th scope="col" className="px-5 py-3.5">Waktu Dibuat</th>
+              <th scope="col" className="px-5 py-3.5">Total Muatan</th>
+              <th scope="col" className="px-5 py-3.5">Status</th>
+              <th scope="col" className="px-5 py-3.5 text-center">Aksi Pelepasan</th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-[#F3E7D8] text-sm text-[#1E293B]">
+          <tbody className="divide-y divide-slate-100">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, index) => (
                 <tr key={index} className="animate-pulse">
-                  <td className="py-4 px-6"><div className="h-4 bg-slate-200 rounded w-28" /></td>
-                  <td className="py-4 px-6"><div className="h-4 bg-slate-200 rounded w-32" /></td>
-                  <td className="py-4 px-6"><div className="h-4 bg-slate-100 rounded w-24" /></td>
-                  <td className="py-4 px-6"><div className="h-4 bg-slate-100 rounded w-16" /></td>
-                  <td className="py-4 px-6"><div className="h-4 bg-slate-200 rounded w-20" /></td>
-                  <td className="py-4 px-6"><div className="h-6 bg-slate-200 rounded-full w-24" /></td>
-                  <td className="py-4 px-6 text-center"><div className="h-8 bg-slate-200 rounded-xl w-36 mx-auto" /></td>
+                  <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded w-28" /></td>
+                  <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded w-32" /></td>
+                  <td className="px-5 py-4"><div className="h-4 bg-slate-100 rounded w-24" /></td>
+                  <td className="px-5 py-4"><div className="h-4 bg-slate-100 rounded w-16" /></td>
+                  <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded w-20" /></td>
+                  <td className="px-5 py-4"><div className="h-6 bg-slate-200 rounded-full w-24" /></td>
+                  <td className="px-5 py-4 text-center"><div className="h-8 bg-slate-200 rounded-xl w-36 mx-auto" /></td>
                 </tr>
               ))
             ) : rows.length === 0 ? (
@@ -108,53 +110,74 @@ export function KonfirmasiPengirimanTable({
                     <p className="text-xs text-slate-400 max-w-sm">
                       Tidak ada Delivery Order berstatus Draft yang menunggu pelepasan armada saat ini.
                     </p>
-                    <Link
-                      href="/pengiriman/tambah"
-                      className="mt-3 inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#A81B1B] bg-[#FDF6EE] hover:bg-[#F3E7D8] border border-[#F3E7D8] transition-all cursor-pointer shadow-2xs"
-                    >
-                      <span>+ Buat Pengiriman Baru</span>
-                    </Link>
+                    {onCreateNew && (
+                      <button
+                        type="button"
+                        onClick={onCreateNew}
+                        className="mt-3 inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#A81B1B] bg-[#FDF6EE] hover:bg-[#F3E7D8] border border-[#F3E7D8] transition-all cursor-pointer shadow-2xs"
+                      >
+                        <span>+ Buat Pengiriman Baru</span>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                   {/* No DO */}
-                  <td className="py-4 px-6 font-bold text-[#18314E] font-mono text-xs">
+                  <td className="px-5 py-4 font-mono font-bold text-slate-900">
                     {row.uniqueId}
                   </td>
 
                   {/* Lapak */}
-                  <td className="py-4 px-6 font-medium text-slate-800">
+                  <td className="px-5 py-4 font-medium text-slate-800">
                     {row.lapakNama}
                   </td>
 
                   {/* Penerima SPG */}
-                  <td className="py-4 px-6 text-slate-600 font-medium">
-                    {row.penerimaSpg}
+                  <td className="px-5 py-4 text-xs">
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-800">
+                        {row.penerimaSpg}
+                      </span>
+                      {(row.penerimaUsername || row.penerimaNoHp) && (
+                        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                          {row.penerimaUsername && <span>@{row.penerimaUsername}</span>}
+                          {row.penerimaUsername && row.penerimaNoHp && <span>•</span>}
+                          {row.penerimaNoHp && <span>{row.penerimaNoHp}</span>}
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   {/* Waktu Dibuat */}
-                  <td className="py-4 px-6 font-mono text-xs text-slate-600">
-                    {row.waktuKirim}
+                  <td className="px-5 py-4 text-xs">
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-800">
+                        {formatJakartaDate(row.tanggalRaw || row.waktuKirim)}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        {formatJakartaTime(row.tanggalRaw || row.waktuKirim)} WIB
+                      </span>
+                    </div>
                   </td>
 
                   {/* Total Muatan */}
-                  <td className="py-4 px-6 text-slate-700 font-medium text-xs">
+                  <td className="px-5 py-4 text-slate-700 font-medium text-xs">
                     <span className="font-bold text-[#18314E]">{row.qtyKirim}</span> Unit
                     <span className="text-slate-400 ml-1">({row.totalItems} Varian)</span>
                   </td>
 
                   {/* Status Badge */}
-                  <td className="py-4 px-6">
+                  <td className="px-5 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-200">
                       Draft (Siap Kirim)
                     </span>
                   </td>
 
                   {/* Aksi Pelepasan */}
-                  <td className="py-4 px-6 text-center">
+                  <td className="px-5 py-4 text-center">
                     <div className="inline-flex items-center space-x-2">
                       {/* Primary Dispatch Confirm Button */}
                       <button
@@ -170,12 +193,12 @@ export function KonfirmasiPengirimanTable({
                       {/* Secondary View Button */}
                       <button
                         type="button"
-                        onClick={() => router.push(`/pengiriman/${row.id}`)}
+                        onClick={() => onViewDetail && onViewDetail(row)}
                         title="Lihat Rincian"
                         aria-label="Lihat Rincian"
-                        className="p-1.5 rounded-xl border border-[#F3E7D8] bg-[#FDF6EE] hover:bg-[#F3E7D8] text-[#18314E] hover:text-[#A81B1B] transition-all cursor-pointer"
+                        className="p-1.5 text-slate-500 hover:text-[#18314E] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       >
-                        <HugeIcon icon={ViewIcon} size={15} strokeWidth={2} />
+                        <HugeIcon icon={ViewIcon} size={16} />
                       </button>
                     </div>
                   </td>
@@ -184,6 +207,11 @@ export function KonfirmasiPengirimanTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Standard Table Footer */}
+      <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Menampilkan {rows.length} pengiriman menunggu konfirmasi</span>
       </div>
 
       {/* Confirmation Modal */}

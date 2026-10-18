@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Shift & Jakarta (WIB) Timezone Utilities
  */
 
@@ -30,6 +30,28 @@ export function resolveCurrentActiveShift(date: Date = new Date()): ShiftType {
   return parseInt(parts, 10) < 13 ? "pagi" : "siang";
 }
 
+/**
+ * Formats date into Indonesian localized short date: e.g.
+ */
+export function formatJakartaDate(date: Date | string | number | null | undefined): string {
+  if (!date) return "-";
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "-";
+    return new Intl.DateTimeFormat("id-ID", {
+      timeZone: TIMEZONE_WIB,
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(d);
+  } catch {
+    return "-";
+  }
+}
+
+/**
+ * Formats time in HH:mm (24-hour) using Jakarta timezone: e.g. "16:55"
+ */
 export function formatJakartaTime(date: Date | string | number | null | undefined): string {
   if (!date) return "-";
   try {
@@ -45,6 +67,55 @@ export function formatJakartaTime(date: Date | string | number | null | undefine
   } catch {
     return "-";
   }
+}
+
+/**
+ * Formats date into full Indonesian datetime: e.g. "18 Okt 2026, 16:55 WIB"
+ */
+export function formatJakartaDateTime(date: Date | string | number | null | undefined): string {
+  if (!date) return "-";
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "-";
+    const datePart = formatJakartaDate(d);
+    const timePart = formatJakartaTime(d);
+    if (datePart === "-" || timePart === "-") return "-";
+    return `${datePart}, ${timePart} WIB`;
+  } catch {
+    return "-";
+  }
+}
+
+/**
+ * Converts a date input string (YYYY-MM-DD) into an ISO timestamp with Jakarta's current or specified time
+ * Prevents the UTC midnight 07:00 artifact
+ */
+export function createJakartaISOString(dateStr: string, timeStr?: string): string {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+    return new Date().toISOString();
+  }
+  const cleanDate = dateStr.trim();
+
+  if (timeStr && /^\d{2}:\d{2}$/.test(timeStr.trim())) {
+    return new Date(`${cleanDate}T${timeStr.trim()}:00+07:00`).toISOString();
+  }
+
+  // Merge with current Jakarta local time
+  const now = new Date();
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: TIMEZONE_WIB,
+    hourCycle: "h23",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const parts = timeFormatter.formatToParts(now);
+  const h = parts.find((p) => p.type === "hour")?.value || "12";
+  const m = parts.find((p) => p.type === "minute")?.value || "00";
+  const s = parts.find((p) => p.type === "second")?.value || "00";
+
+  return new Date(`${cleanDate}T${h}:${m}:${s}+07:00`).toISOString();
 }
 
 export function isTimestampInShift(timestamp: Date | string | number, shift: ShiftType): boolean {

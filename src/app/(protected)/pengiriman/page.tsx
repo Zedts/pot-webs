@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdminOrOwner } from "@/types/user";
 import {
   pengirimanService,
   PengirimanPageData,
 } from "@/services/pengiriman.service";
+import { PengirimanTableRow } from "@/types/pengiriman";
 import { PengirimanTabs, PengirimanTabKey } from "@/components/pengiriman/PengirimanTabs";
 import { PengirimanSummaryCards } from "@/components/pengiriman/PengirimanSummaryCards";
 import { PengirimanTable } from "@/components/pengiriman/PengirimanTable";
 import { KonfirmasiPengirimanTable } from "@/components/pengiriman/KonfirmasiPengirimanTable";
+import { PengirimanFormModal } from "@/components/pengiriman/PengirimanFormModal";
+import { PengirimanDetailModal } from "@/components/pengiriman/PengirimanDetailModal";
+import { RefreshButton } from "@/components/ui/RefreshButton";
 import { showToast } from "@/lib/toast";
 import { getJakartaDateString } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
@@ -23,11 +27,18 @@ export default function PengirimanPage() {
   const [activeTab, setActiveTab] = useState<PengirimanTabKey>("daftar");
   const [data, setData] = useState<PengirimanPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
+  // Modals state
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+
+  const loadData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
+    else setIsRefreshing(true);
     setErrorMessage(null);
 
     try {
@@ -42,6 +53,7 @@ export default function PengirimanPage() {
       );
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, []);
 
@@ -55,26 +67,7 @@ export default function PengirimanPage() {
     try {
       await pengirimanService.updateShipmentStatus(id, "dikirim_viar");
       showToast.success("Pengiriman berhasil dikonfirmasi dan beralih ke status Dalam Perjalanan.");
-
-      setData((prev) => {
-        if (!prev) return prev;
-        const updatedRows = prev.rows.map((r) =>
-          r.id === id ? { ...r, status: "dikirim_viar" as const } : r
-        );
-        const updatedDraftRows = prev.draftRows.filter((r) => r.id !== id);
-        const updatedSummary = {
-          ...prev.summary,
-          draftCount: updatedDraftRows.length,
-          totalDalamPerjalanan: prev.summary.totalDalamPerjalanan + 1,
-        };
-
-        return {
-          ...prev,
-          rows: updatedRows,
-          draftRows: updatedDraftRows,
-          summary: updatedSummary,
-        };
-      });
+      await loadData(true);
     } catch (err: unknown) {
       const apiErr = err as { userMessage?: string; message?: string };
       showToast.error(
@@ -92,43 +85,7 @@ export default function PengirimanPage() {
     try {
       await pengirimanService.deletePengiriman(id);
       showToast.success("Dokumen Delivery Order berhasil dihapus.");
-
-      setData((prev) => {
-        if (!prev) return prev;
-        const deletedRow = prev.rows.find((r) => r.id === id);
-        const updatedRows = prev.rows.filter((r) => r.id !== id);
-        const updatedDraftRows = prev.draftRows.filter((r) => r.id !== id);
-        const wasToday =
-          deletedRow?.tanggalRaw &&
-          getJakartaDateString(new Date(deletedRow.tanggalRaw)) === prev.date;
-
-        const updatedSummary = {
-          ...prev.summary,
-          totalPengirimanHariIni: wasToday
-            ? Math.max(0, prev.summary.totalPengirimanHariIni - 1)
-            : prev.summary.totalPengirimanHariIni,
-          totalUnitKirim: wasToday
-            ? Math.max(0, prev.summary.totalUnitKirim - (deletedRow?.qtyKirim || 0))
-            : prev.summary.totalUnitKirim,
-          draftCount: updatedDraftRows.length,
-          totalDalamPerjalanan:
-            wasToday &&
-            (deletedRow?.status === "draft" || deletedRow?.status === "dikirim_viar")
-              ? Math.max(0, prev.summary.totalDalamPerjalanan - 1)
-              : prev.summary.totalDalamPerjalanan,
-          totalStatusSelesai:
-            wasToday && deletedRow?.status === "selesai"
-              ? Math.max(0, prev.summary.totalStatusSelesai - 1)
-              : prev.summary.totalStatusSelesai,
-        };
-
-        return {
-          ...prev,
-          rows: updatedRows,
-          draftRows: updatedDraftRows,
-          summary: updatedSummary,
-        };
-      });
+      await loadData(true);
     } catch (err: unknown) {
       const apiErr = err as { userMessage?: string; message?: string };
       showToast.error(
@@ -140,14 +97,35 @@ export default function PengirimanPage() {
     }
   };
 
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenEdit = (row: PengirimanTableRow) => {
+    setEditingId(row.id);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenPreview = (row: PengirimanTableRow) => {
+    setPreviewId(row.id);
+  };
+
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
-      {/* Page Header with Tabs on the Right (Mirrors Dashboard Header & sits above Summary Cards) */}
+      {/* Page Header with RefreshButton & Tabs on Top Right */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
-            Pengiriman
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
+              Pengiriman
+            </h1>
+            <RefreshButton
+              onClick={() => loadData(true)}
+              isRefreshing={isRefreshing}
+              disabled={isLoading}
+            />
+          </div>
           <p className="text-xs md:text-sm text-[#6B7280] font-medium mt-0.5">
             Monitoring alokasi stok, Delivery Order (DO), dan pelepasan armada ke seluruh outlet
           </p>
@@ -180,14 +158,14 @@ export default function PengirimanPage() {
         </div>
       )}
 
-      {/* 5 Summary Cards */}
+      {/* KPI Metric Summary Cards */}
       <PengirimanSummaryCards
         summary={data?.summary}
         isLoading={isLoading}
       />
 
-      {/* Tab Views */}
-      {activeTab === "daftar" ? (
+      {/* Tab 1: Daftar Pengiriman */}
+      {activeTab === "daftar" && (
         <PengirimanTable
           rows={data?.rows || []}
           lapakList={data?.lapakList || []}
@@ -195,15 +173,41 @@ export default function PengirimanPage() {
           canCreate={isPrivileged}
           canDelete={isPrivileged}
           onDelete={handleDeletePengiriman}
+          onCreate={handleOpenCreate}
+          onEdit={handleOpenEdit}
+          onPreview={handleOpenPreview}
         />
-      ) : (
+      )}
+
+      {/* Tab 2: Konfirmasi Pelepasan Pengiriman */}
+      {activeTab === "konfirmasi" && (
         <KonfirmasiPengirimanTable
           rows={data?.draftRows || []}
           isLoading={isLoading}
-          onConfirm={handleConfirmDispatch}
           isConfirming={isConfirming}
+          onConfirm={handleConfirmDispatch}
+          onViewDetail={handleOpenPreview}
         />
       )}
+
+      {/* Form Modal (Create & Edit DO) */}
+      <PengirimanFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        editId={editingId}
+        lapakList={data?.lapakList || []}
+        onSuccess={() => loadData(true)}
+      />
+
+      {/* Detail Modal (Preview DO) */}
+      <PengirimanDetailModal
+        pengirimanId={previewId}
+        onClose={() => setPreviewId(null)}
+        onEdit={(id) => {
+          setEditingId(id);
+          setIsFormModalOpen(true);
+        }}
+      />
     </div>
   );
 }

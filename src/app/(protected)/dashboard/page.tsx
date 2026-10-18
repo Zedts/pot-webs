@@ -10,7 +10,8 @@ import {
 } from "@/services/dashboard.service";
 import { SummaryCardsGrid } from "@/components/dashboard/SummaryCardsGrid";
 import { StatusLapakTable } from "@/components/dashboard/StatusLapakTable";
-import { SHIFT_CONFIG } from "@/utils/shift.utils";
+import { RefreshButton } from "@/components/ui/RefreshButton";
+import { SHIFT_CONFIG, formatJakartaDate } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   AlertCircleIcon,
@@ -105,7 +106,7 @@ export default function DashboardPage() {
   }
 
   // Admin & Owner View: Operational Dashboard
-  const currentDateStr = data?.date || "Hari Ini";
+  const currentDateStr = data?.date ? formatJakartaDate(data.date) : "Hari Ini";
   const currentShiftConfig = SHIFT_CONFIG[activeShift];
   const isLoading = (!data && !errorMessage) || isRefreshing;
 
@@ -114,9 +115,16 @@ export default function DashboardPage() {
       {/* Page Title & Shift Information Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
-            Dashboard Operasional
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
+              Dashboard Operasional
+            </h1>
+            <RefreshButton
+              onClick={() => loadData(true)}
+              isRefreshing={isRefreshing}
+              disabled={isLoading}
+            />
+          </div>
           <p className="text-xs md:text-sm text-[#6B7280] font-medium mt-0.5">
             Data real-time presensi, pengiriman, dan ringkasan penjualan hari ini
           </p>

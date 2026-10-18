@@ -20,7 +20,7 @@ export interface AbsensiModel {
   jam_masuk?: string | null;
   jam_pulang?: string | null;
   status?: string;
-  user?: { id: string; nama: string; username?: string } | null;
+  user?: { id: string; nama: string; username?: string; no_hp?: string } | null;
   lapak?: { id: string } | null;
   lapak_id?: string;
 }
@@ -65,6 +65,7 @@ export interface StatusLapakRow {
   lapakNama: string;
   spgNama: string;
   spgUsername: string;
+  spgNoHp?: string;
   jamMasuk: string;
   jamPulang: string;
   totalPenjualan: number;
@@ -183,18 +184,24 @@ class DashboardService {
 
       let spgName = "-";
       let spgUsername = "-";
+      let spgNoHp = "";
+
+      const spgList = Array.isArray(lapak.spg)
+        ? lapak.spg
+        : lapak.spg
+        ? [lapak.spg]
+        : [];
 
       if (attendance?.user?.nama) {
         spgName = attendance.user.nama;
         spgUsername = attendance.user.username || "";
-      } else if (lapak.spg?.nama) {
-        spgName = `${lapak.spg.nama} (Belum Masuk)`;
-        spgUsername = lapak.spg.username || "";
-      } else if (lapak.users && lapak.users.length > 0) {
+        spgNoHp = attendance.user.no_hp || "";
+      } else if (spgList.length > 0) {
         const primaryUser =
-          lapak.users.find((u) => (u.shift || "").toLowerCase() === activeShift) || lapak.users[0];
+          spgList.find((u) => (u.shift || "").toLowerCase() === activeShift) || spgList[0];
         spgName = `${primaryUser.nama} (Belum Masuk)`;
         spgUsername = primaryUser.username || "";
+        spgNoHp = primaryUser.no_hp || "";
       }
 
       let closingStatus: StatusLapakRow["closingStatus"] = "belum_closing";
@@ -216,6 +223,7 @@ class DashboardService {
         lapakNama: lapak.nama,
         spgNama: spgName,
         spgUsername,
+        spgNoHp,
         jamMasuk: formatJakartaTime(attendance?.jam_masuk),
         jamPulang: formatJakartaTime(attendance?.jam_pulang),
         totalPenjualan: penjualanByLapak.get(lapak.id) || 0,

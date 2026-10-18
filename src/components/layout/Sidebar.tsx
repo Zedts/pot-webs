@@ -34,7 +34,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: DashboardSquare01Icon },
   { label: "Pengiriman", href: "/pengiriman", icon: DeliveryTruck01Icon },
-  { label: "Stok", href: "/stok", icon: PackageIcon },
+  { label: "Stok Lapak Produk", href: "/slp", icon: PackageIcon },
   { label: "Penjualan", href: "/penjualan", icon: Invoice01Icon },
   { label: "Absensi", href: "/absensi", icon: Time04Icon },
   { label: "Payroll", href: "/payroll", icon: Money03Icon, adminOnly: true },

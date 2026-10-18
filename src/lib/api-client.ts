@@ -5,6 +5,97 @@ interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }
 
+/**
+ * Sanitizes technical error messages and raw database identifiers into
+ * friendly, readable Indonesian messages.
+ */
+function sanitizeErrorMessage(msg?: string): string {
+  if (!msg || typeof msg !== "string") {
+    return "Terjadi kesalahan saat memproses data.";
+  }
+
+  let text = msg.trim();
+
+  // 1. Specific known error mappings
+  if (/validation failed for create produk/i.test(text)) {
+    return "Validasi data produk gagal. Silakan periksa kembali input Anda.";
+  }
+  if (/validation failed for update produk/i.test(text)) {
+    return "Validasi pembaruan produk gagal. Silakan periksa kembali input Anda.";
+  }
+  if (/validation failed for create lapak/i.test(text)) {
+    return "Validasi data outlet lapak gagal. Silakan periksa kelengkapan formulir.";
+  }
+  if (/validation failed for update lapak/i.test(text)) {
+    return "Validasi pembaruan outlet lapak gagal. Silakan periksa kelengkapan formulir.";
+  }
+  if (/field ['"]is_active['"] must be one of/i.test(text)) {
+    return "Status produk harus berupa aktif atau nonaktif.";
+  }
+  if (/field ['"]harga_satuan['"] must be/i.test(text)) {
+    return "Harga satuan harus berupa angka nominal yang valid.";
+  }
+  if (/field ['"]stok_minimum['"] must be/i.test(text)) {
+    return "Stok minimum harus berupa angka bulat tidak negatif.";
+  }
+  if (/category with name ['"].*['"] already exists/i.test(text)) {
+    return "Kategori dengan nama tersebut sudah terdaftar di sistem.";
+  }
+  if (/unit with name ['"].*['"] already exists/i.test(text)) {
+    return "Satuan dengan nama tersebut sudah terdaftar di sistem.";
+  }
+  if (/cannot delete category: it is currently referenced by (\d+) product/i.test(text)) {
+    const match = text.match(/by (\d+) product/i);
+    const count = match ? match[1] : "";
+    return `Kategori tidak dapat dihapus karena masih digunakan oleh ${count} produk.`;
+  }
+  if (/cannot delete unit: it is currently referenced by (\d+) product/i.test(text)) {
+    const match = text.match(/by (\d+) product/i);
+    const count = match ? match[1] : "";
+    return `Satuan tidak dapat dihapus karena masih digunakan oleh ${count} produk.`;
+  }
+  if (/cannot delete product: it is currently referenced by (\d+) shipment/i.test(text)) {
+    return "Produk tidak dapat dihapus karena masih terhubung dengan riwayat pengiriman.";
+  }
+  if (/cannot delete product: it is currently referenced by (\d+) inventory/i.test(text)) {
+    return "Produk tidak dapat dihapus karena masih memiliki catatan stok di lapak.";
+  }
+  if (/cannot delete lapak.*referenced in active shipments/i.test(text)) {
+    return "Outlet lapak tidak dapat dihapus karena masih terhubung dengan pengiriman aktif.";
+  }
+  if (/cannot delete lapak.*active stock inventory/i.test(text)) {
+    return "Outlet lapak tidak dapat dihapus karena masih memiliki inventaris stok.";
+  }
+
+  // 2. Duplicate stock tracking fallback
+  if (/stock tracking for lapak .* and produk .* already exists/i.test(text)) {
+    return "Pencatatan stok untuk lapak dan produk tersebut sudah terdaftar di sistem.";
+  }
+
+  // 3. Entity not found fallbacks without raw IDs
+  if (/user with id .* was not found/i.test(text)) {
+    return "Pengguna yang dipilih tidak ditemukan di sistem.";
+  }
+  if (/lapak with id .* was not found/i.test(text)) {
+    return "Data outlet lapak tidak ditemukan.";
+  }
+  if (/produk with id .* was not found/i.test(text)) {
+    return "Data produk tidak ditemukan.";
+  }
+  if (/stock record with id .* was not found/i.test(text)) {
+    return "Data pencatatan stok lapak tidak ditemukan.";
+  }
+
+  // 4. Scrub raw alphanumeric database IDs (15+ chars)
+  text = text.replace(/['"][a-zA-Z0-9_-]{15,}['"]/g, "");
+  text = text.replace(/\b[a-zA-Z0-9_-]{18,}\b/g, "");
+
+  // Clean double spaces & leftover punctuation
+  text = text.replace(/\s+/g, " ").trim();
+
+  return text || "Terjadi kesalahan saat memproses data.";
+}
+
 export class ApiClient {
   private baseUrl: string;
 
@@ -25,12 +116,14 @@ export class ApiClient {
     errors?: string[],
     requiresAuth?: boolean
   ): string {
+    // If specific validation errors exist, sanitize and return the first one
     if (errors && errors.length > 0) {
-      return errors[0];
+      const sanitized = sanitizeErrorMessage(errors[0]);
+      if (sanitized) return sanitized;
     }
 
     if (statusCode === 400) {
-      return rawMessage || "Permintaan tidak valid.";
+      return sanitizeErrorMessage(rawMessage) || "Permintaan tidak valid.";
     }
     if (statusCode === 401) {
       if (rawMessage && rawMessage.toLowerCase().includes("inactive")) {
@@ -46,15 +139,15 @@ export class ApiClient {
       return "Anda tidak memiliki akses ke fitur ini.";
     }
     if (statusCode === 404) {
-      return "Data tidak ditemukan.";
+      return sanitizeErrorMessage(rawMessage) || "Data tidak ditemukan.";
     }
     if (statusCode === 409) {
-      return rawMessage || "Data sudah terdaftar di sistem.";
+      return sanitizeErrorMessage(rawMessage) || "Data sudah terdaftar di sistem.";
     }
     if (statusCode >= 500) {
       return "Terjadi kesalahan sistem. Silakan coba lagi nanti.";
     }
-    return rawMessage || "Terjadi kesalahan saat memproses permintaan.";
+    return sanitizeErrorMessage(rawMessage) || "Terjadi kesalahan saat memproses permintaan.";
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {

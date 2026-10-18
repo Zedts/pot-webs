@@ -48,11 +48,15 @@ export class PengirimanService {
     lapakMap: Map<string, LapakSimple>,
     absensiMap: Map<string, AbsensiSimple>,
     penerimaanMap: Map<string, PenerimaanModel>
-  ): string {
+  ): { nama: string; username?: string; no_hp?: string } {
     // 1. If physical receipt is already recorded, use the receiving SPG
     const receipt = penerimaanMap.get(shipment.id);
     if (receipt?.spg?.nama) {
-      return receipt.spg.nama;
+      return {
+        nama: receipt.spg.nama,
+        username: (receipt.spg as any).username,
+        no_hp: (receipt.spg as any).no_hp,
+      };
     }
 
     const lapak = lapakMap.get(shipment.lapak_id) || shipment.lapak;
@@ -84,25 +88,36 @@ export class PengirimanService {
     const attendanceKey = `${shipment.lapak_id}_${targetShift}`;
     const attendance = absensiMap.get(attendanceKey);
     if (attendance?.user?.nama) {
-      return attendance.user.nama;
+      return {
+        nama: attendance.user.nama,
+        username: attendance.user.username,
+        no_hp: (attendance.user as any).no_hp,
+      };
     }
 
     // 4. Check scheduled users assigned to this lapak matching the target shift
-    if (lapak?.users && lapak.users.length > 0) {
-      const scheduled = lapak.users.find(
+    const spgList = Array.isArray(lapak?.spg) ? lapak.spg : (lapak?.spg ? [lapak.spg] : []);
+    if (spgList.length > 0) {
+      const scheduled = spgList.find(
         (u) => (u.shift || "").toLowerCase() === targetShift
       );
       if (scheduled?.nama) {
-        return `${scheduled.nama} (Terjadwal)`;
+        return {
+          nama: `${scheduled.nama} (Terjadwal)`,
+          username: scheduled.username,
+          no_hp: scheduled.no_hp,
+        };
+      }
+      if (spgList[0]?.nama) {
+        return {
+          nama: `${spgList[0].nama} (Utama)`,
+          username: spgList[0].username,
+          no_hp: spgList[0].no_hp,
+        };
       }
     }
 
-    // 5. Fallback to primary stall SPG
-    if (lapak?.spg?.nama) {
-      return `${lapak.spg.nama} (Utama)`;
-    }
-
-    return "-";
+    return { nama: "-" };
   }
 
   /**
@@ -178,7 +193,7 @@ export class PengirimanService {
 
       const lapak = lapakMap.get(p.lapak_id) || p.lapak;
       const receipt = penerimaanMap.get(p.id);
-      const penerimaSpg = this.resolveSpgReceiver(
+      const receiver = this.resolveSpgReceiver(
         p,
         lapakMap,
         absensiMap,
@@ -190,13 +205,15 @@ export class PengirimanService {
         uniqueId: p.unique_id || `#PG-${p.id.slice(-6).toUpperCase()}`,
         lapakNama: lapak?.nama || "Lapak Tidak Ditemukan",
         lapakId: p.lapak_id,
-        penerimaSpg,
-        waktuKirim: formatJakartaTime(rawDate),
+        penerimaSpg: receiver.nama,
+        penerimaUsername: receiver.username,
+        penerimaNoHp: receiver.no_hp,
+        waktuKirim: formatJakartaTime(p.createdAt || rawDate),
         totalItems: p.total_items || 0,
         qtyKirim: p.qty_kirim || 0,
         status: p.status,
         statusPenerimaan: receipt?.status || null,
-        tanggalRaw: rawDate || null,
+        tanggalRaw: p.createdAt || rawDate || null,
       };
 
       rows.push(row);
@@ -277,7 +294,33 @@ export class PengirimanService {
     if (!res.data) {
       throw new Error("Data pengiriman tidak ditemukan.");
     }
-    return res.data;
+
+    const shipment = res.data;
+    const creatorId = shipment.creator?.id || shipment.created_by;
+    if (creatorId && (!shipment.creator?.username || !shipment.creator?.no_hp)) {
+      try {
+        const userRes = await apiClient.get<{ username?: string; no_hp?: string; nama?: string }>(
+          `${ApiEndpoints.users}/${creatorId}`,
+          { requiresAuth: true }
+        );
+        if (userRes.data) {
+          if (!shipment.creator) {
+            shipment.creator = {
+              id: creatorId,
+              nama: userRes.data.nama || "Admin",
+              email: "",
+              role: "",
+            };
+          }
+          shipment.creator.username = userRes.data.username || shipment.creator.username;
+          shipment.creator.no_hp = userRes.data.no_hp || shipment.creator.no_hp;
+        }
+      } catch {
+        // Fallback gracefully without breaking shipment preview
+      }
+    }
+
+    return shipment;
   }
 
   /**

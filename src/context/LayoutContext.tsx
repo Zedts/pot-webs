@@ -6,41 +6,24 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  Suspense,
 } from "react";
-import { usePathname } from "next/navigation";
 import { ShiftType, resolveCurrentActiveShift } from "@/utils/shift.utils";
 
 interface LayoutContextType {
   isDesktopCollapsed: boolean;
   isMobileOpen: boolean;
   activeShift: ShiftType;
-  searchTerm: string;
   toggleSidebar: () => void;
   closeMobileSidebar: () => void;
   setActiveShift: (shift: ShiftType) => void;
-  setSearchTerm: (term: string) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
-function PathnameChangeWatcher({ onChange }: { onChange: () => void }) {
-  const pathname = usePathname();
-  useEffect(() => {
-    onChange();
-  }, [pathname, onChange]);
-  return null;
-}
-
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [activeShift, setActiveShift] = useState<ShiftType>("pagi");
-
-  const handleResetSearch = useCallback(() => {
-    setSearchTerm("");
-  }, []);
 
   // Set initial shift based on current time after mount (avoids prerender mismatch)
   useEffect(() => {
@@ -65,16 +48,11 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
         isDesktopCollapsed,
         isMobileOpen,
         activeShift,
-        searchTerm,
         toggleSidebar,
         closeMobileSidebar,
         setActiveShift,
-        setSearchTerm,
       }}
     >
-      <Suspense fallback={null}>
-        <PathnameChangeWatcher onChange={handleResetSearch} />
-      </Suspense>
       {children}
     </LayoutContext.Provider>
   );

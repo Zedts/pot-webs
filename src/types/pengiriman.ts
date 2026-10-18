@@ -34,6 +34,8 @@ export interface CreatorSimple {
   nama: string;
   email: string;
   role: string;
+  username?: string;
+  no_hp?: string;
 }
 
 export interface PengirimanDetailModel {
@@ -78,6 +80,8 @@ export interface PenerimaanModel {
   spg?: {
     id: string;
     nama: string;
+    username?: string;
+    no_hp?: string;
     email?: string;
     role?: string;
   } | null;
@@ -129,6 +133,8 @@ export interface PengirimanTableRow {
   lapakNama: string;
   lapakId: string;
   penerimaSpg: string;
+  penerimaUsername?: string;
+  penerimaNoHp?: string;
   waktuKirim: string;
   totalItems: number;
   qtyKirim: number;

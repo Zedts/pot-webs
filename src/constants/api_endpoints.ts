@@ -13,6 +13,9 @@
   produk: "/produk",
   stokLapak: "/stok-lapak",
   closing: "/closing",
+  kategori: "/kategori",
+  satuan: "/satuan",
+  users: "/users",
 } as const;
 
 export type ApiEndpoints = typeof ApiEndpoints;
