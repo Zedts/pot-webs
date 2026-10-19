@@ -81,6 +81,9 @@ class UserService {
    * Dedicated shift update operation
    */
   async updateUserShift(id: string, shift: string | null): Promise<UserModel> {
+    if (!shift) {
+      return this.updateUser(id, { shift: null });
+    }
     const res = await apiClient.patch<UserModel>(
       `${ApiEndpoints.users}/${id}/shift`,
       { shift },

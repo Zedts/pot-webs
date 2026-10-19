@@ -137,6 +137,32 @@ export function UserEditModal({
     return opts;
   }, [lapakList]);
 
+  // Track modification state across tabs so switching tabs preserves and submits all changes
+  const isRoleChanged = Boolean(
+    user && selectedRole !== (user.role?.toLowerCase() || "unassigned")
+  );
+
+  const isLapakChanged = Boolean(
+    user && selectedLapakId !== (user.lapak_id || "none")
+  );
+
+  const isShiftChanged = Boolean(
+    user && selectedShift !== (user.shift?.toLowerCase() || "none")
+  );
+
+  const isProfileChanged = Boolean(
+    user &&
+      (nama.trim() !== (user.nama || "") ||
+        username.trim() !== (user.username || "") ||
+        email.trim().toLowerCase() !== (user.email?.toLowerCase() || "") ||
+        noHp.trim() !== (user.no_hp || "") ||
+        status.toLowerCase() !== (user.status?.toLowerCase() || "active") ||
+        password.trim().length > 0)
+  );
+
+  const hasAnyChange =
+    isRoleChanged || isLapakChanged || isShiftChanged || isProfileChanged;
+
   if (!isOpen || !user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,33 +170,47 @@ export function UserEditModal({
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    // Determine target operations: submit all changed tabs or fallback to active tab if no changes detected
+    const shouldUpdateRole = isRoleChanged || (!hasAnyChange && activeMode === "role");
+    const shouldUpdateLapak = isLapakChanged || (!hasAnyChange && activeMode === "lapak");
+    const shouldUpdateShift =
+      (isShiftChanged || (!hasAnyChange && activeMode === "shift")) &&
+      (hasLapak || Boolean(user.shift));
+    const shouldUpdateProfile = isProfileChanged || (!hasAnyChange && activeMode === "full");
+
     try {
-      if (activeMode === "role") {
+      const updatedLabels: string[] = [];
+
+      // 1. Role Update (Dedicated endpoint) - Execute first so subsequent lapak sync recognizes role (e.g. SPG)
+      if (shouldUpdateRole) {
         await userService.updateUserRole(user.id, selectedRole);
-        showToast.success(`Role pengguna berhasil diubah menjadi '${selectedRole.toUpperCase()}'.`);
-      } else if (activeMode === "lapak") {
+        updatedLabels.push(`Role (${selectedRole.toUpperCase()})`);
+      }
+
+      // 2. Lapak Assignment Update (Dedicated endpoint)
+      if (shouldUpdateLapak) {
         const cleanLapakId = selectedLapakId === "none" ? null : selectedLapakId;
         await userService.updateUserLapak(user.id, cleanLapakId);
-        showToast.success(
-          cleanLapakId
-            ? "Penugasan outlet lapak berhasil diperbarui."
-            : "Penugasan outlet lapak berhasil dikosongkan."
-        );
-      } else if (activeMode === "shift") {
-        if (!hasLapak) {
-          setErrorMessage("Pilih outlet lapak terlebih dahulu sebelum mengatur jadwal shift kerja.");
-          setIsSubmitting(false);
-          return;
+        updatedLabels.push(cleanLapakId ? "Outlet Lapak" : "Kosongkan Lapak");
+
+        // If lapak was removed and user had a shift, auto-clear shift
+        if (!cleanLapakId && user.shift) {
+          await userService.updateUserShift(user.id, null);
+          updatedLabels.push("Kosongkan Shift");
         }
+      }
+
+      // 3. Shift Assignment Update (Dedicated endpoint)
+      if (shouldUpdateShift && hasLapak) {
         const cleanShift = selectedShift === "none" ? null : selectedShift;
         await userService.updateUserShift(user.id, cleanShift);
-        showToast.success(
-          cleanShift
-            ? `Shift kerja berhasil diatur ke '${cleanShift.toUpperCase()}'.`
-            : "Jadwal shift kerja berhasil dikosongkan."
+        updatedLabels.push(
+          cleanShift ? `Shift (${cleanShift.toUpperCase()})` : "Kosongkan Shift"
         );
-      } else {
-        // Mode: full (PUT)
+      }
+
+      // 4. Profile Details Update (Full PUT endpoint)
+      if (shouldUpdateProfile) {
         const payload: UpdateUserPayload = {
           nama: nama.trim(),
           username: username.trim(),
@@ -185,7 +225,13 @@ export function UserEditModal({
           payload.password = password.trim();
         }
         await userService.updateUser(user.id, payload);
-        showToast.success("Profil lengkap pengguna berhasil diperbarui.");
+        updatedLabels.push("Profil");
+      }
+
+      if (updatedLabels.length > 0) {
+        showToast.success(`Data pengguna (${updatedLabels.join(", ")}) berhasil diperbarui.`);
+      } else {
+        showToast.info("Tidak ada perubahan data.");
       }
 
       await onSuccess();
@@ -245,7 +291,7 @@ export function UserEditModal({
                 setActiveMode("role");
                 setErrorMessage(null);
               }}
-              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer relative ${
                 activeMode === "role"
                   ? "bg-white text-[#18314E] shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -253,6 +299,9 @@ export function UserEditModal({
             >
               <HugeIcon icon={Shield01Icon} size={14} />
               <span>Atur Role</span>
+              {isRoleChanged && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Perubahan role siap disimpan" />
+              )}
             </button>
 
             <button
@@ -261,7 +310,7 @@ export function UserEditModal({
                 setActiveMode("lapak");
                 setErrorMessage(null);
               }}
-              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer relative ${
                 activeMode === "lapak"
                   ? "bg-white text-[#18314E] shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -269,6 +318,9 @@ export function UserEditModal({
             >
               <HugeIcon icon={Store01Icon} size={14} />
               <span>Atur Lapak</span>
+              {isLapakChanged && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Perubahan lapak siap disimpan" />
+              )}
             </button>
 
             <button
@@ -277,7 +329,7 @@ export function UserEditModal({
                 setActiveMode("shift");
                 setErrorMessage(null);
               }}
-              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer relative ${
                 activeMode === "shift"
                   ? "bg-white text-[#18314E] shadow-2xs"
                   : hasLapak
@@ -287,9 +339,11 @@ export function UserEditModal({
             >
               <HugeIcon icon={Time04Icon} size={14} />
               <span>Atur Shift</span>
-              {!hasLapak && (
+              {isShiftChanged ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Perubahan shift siap disimpan" />
+              ) : !hasLapak ? (
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Outlet lapak belum ditentukan" />
-              )}
+              ) : null}
             </button>
 
             <button
@@ -298,14 +352,17 @@ export function UserEditModal({
                 setActiveMode("full");
                 setErrorMessage(null);
               }}
-              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer relative ${
                 activeMode === "full"
                   ? "bg-white text-[#18314E] shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <HugeIcon icon={UserIcon} size={14} />
-              <span>Ubah Normal</span>
+              <span>Ubah Profile</span>
+              {isProfileChanged && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Perubahan profil siap disimpan" />
+              )}
             </button>
           </div>
         </div>
@@ -351,7 +408,12 @@ export function UserEditModal({
                 <SearchableSelect
                   options={lapakOptions}
                   value={selectedLapakId}
-                  onChange={setSelectedLapakId}
+                  onChange={(val) => {
+                    setSelectedLapakId(val);
+                    if (val === "none") {
+                      setSelectedShift("none");
+                    }
+                  }}
                   placeholder="Pilih outlet lapak..."
                   searchPlaceholder="Cari outlet lapak..."
                   required
@@ -549,9 +611,9 @@ export function UserEditModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || (activeMode === "shift" && !hasLapak)}
+              disabled={isSubmitting || (activeMode === "shift" && !hasLapak && !hasAnyChange)}
               className={`px-5 py-2 text-xs font-semibold text-white bg-[#A81B1B] hover:bg-[#8B1717] rounded-xl shadow-sm transition-all flex items-center gap-1.5 ${
-                isSubmitting || (activeMode === "shift" && !hasLapak)
+                isSubmitting || (activeMode === "shift" && !hasLapak && !hasAnyChange)
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
               }`}
