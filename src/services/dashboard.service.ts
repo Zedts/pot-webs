@@ -1,4 +1,4 @@
-﻿import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { ApiEndpoints } from "@/constants/api_endpoints";
 import { ApiResponse } from "@/types/api";
 import {
@@ -7,12 +7,17 @@ import {
   formatJakartaTime,
   isTimestampInShift,
 } from "@/utils/shift.utils";
+import { PenjualanModel } from "@/types/penjualan";
+
+export type { PenjualanModel };
 
 export interface LapakModel {
   id: string;
   nama: string;
-  spg?: { nama: string; username?: string } | null;
-  users?: Array<{ nama: string; username?: string; shift?: string | null }>;
+  spg?: { nama: string; username?: string; shift?: string | null; no_hp?: string } | Array<{ nama: string; username?: string; shift?: string | null; no_hp?: string }> | null;
+  users?: Array<{ nama: string; username?: string; shift?: string | null; no_hp?: string }>;
+  shift_pagi?: [string, string] | null;
+  shift_siang?: [string, string] | null;
 }
 
 export interface AbsensiModel {
@@ -20,16 +25,8 @@ export interface AbsensiModel {
   jam_masuk?: string | null;
   jam_pulang?: string | null;
   status?: string;
-  user?: { id: string; nama: string; username?: string; no_hp?: string } | null;
-  lapak?: { id: string } | null;
-  lapak_id?: string;
-}
-
-export interface PenjualanModel {
-  total_harga?: number;
-  tanggal?: string;
-  spg?: { id: string } | null;
-  spg_id?: string;
+  shift_spg?: string | null;
+  user?: { id: string; nama: string; username?: string; no_hp?: string; shift?: string | null } | null;
   lapak?: { id: string } | null;
   lapak_id?: string;
 }
@@ -66,6 +63,8 @@ export interface StatusLapakRow {
   spgNama: string;
   spgUsername: string;
   spgNoHp?: string;
+  spgShift: string | null;
+  rawLapak?: LapakModel;
   jamMasuk: string;
   jamPulang: string;
   totalPenjualan: number;
@@ -78,23 +77,25 @@ export interface DashboardDataResult {
   summary: DashboardSummary;
   rows: StatusLapakRow[];
   date: string;
-  shift: ShiftType;
+  shift: ShiftType | "all";
 }
 
 const getListData = <T>(res: PromiseSettledResult<ApiResponse<T[]>>): T[] =>
   res.status === "fulfilled" && Array.isArray(res.value?.data) ? res.value.data : [];
 
 class DashboardService {
-  async getDashboardData(activeShift: ShiftType): Promise<DashboardDataResult> {
+  async getDashboardData(activeShift: ShiftType | "all" = "all"): Promise<DashboardDataResult> {
     const targetDate = getJakartaDateString();
+
+    const absensiUrl =
+      activeShift && activeShift !== "all"
+        ? `${ApiEndpoints.absensi}?tanggal=${targetDate}&shift_spg=${activeShift}`
+        : `${ApiEndpoints.absensi}?tanggal=${targetDate}`;
 
     const [lapakRes, absensiRes, penjualanRes, pengirimanRes, stokRes, closingRes] =
       await Promise.allSettled([
         apiClient.get<LapakModel[]>(ApiEndpoints.lapak, { requiresAuth: true }),
-        apiClient.get<AbsensiModel[]>(
-          `${ApiEndpoints.absensi}?tanggal=${targetDate}&shift_spg=${activeShift}`,
-          { requiresAuth: true }
-        ),
+        apiClient.get<AbsensiModel[]>(absensiUrl, { requiresAuth: true }),
         apiClient.get<PenjualanModel[]>(
           `${ApiEndpoints.penjualan}?tanggal=${targetDate}`,
           { requiresAuth: true }
@@ -121,8 +122,19 @@ class DashboardService {
 
     for (const a of absensiList) {
       const stallId = a.lapak?.id || a.lapak_id;
-      if (stallId && !absensiByLapak.has(stallId)) {
-        absensiByLapak.set(stallId, a);
+      if (stallId) {
+        const existing = absensiByLapak.get(stallId);
+        if (!existing) {
+          absensiByLapak.set(stallId, a);
+        } else if (activeShift && activeShift !== "all") {
+          if ((a.shift_spg || "").toLowerCase() === activeShift) {
+            absensiByLapak.set(stallId, a);
+          }
+        } else {
+          if (a.jam_masuk && (!existing.jam_masuk || a.jam_masuk > existing.jam_masuk)) {
+            absensiByLapak.set(stallId, a);
+          }
+        }
       }
       if (a.user?.id) clockedInSpgIds.add(a.user.id);
       const st = (a.status || "").toLowerCase();
@@ -139,8 +151,10 @@ class DashboardService {
       const saleAmount = Number(p.total_harga || 0);
 
       const belongsToShift =
-        (spgId && clockedInSpgIds.has(spgId)) ||
-        (p.tanggal ? isTimestampInShift(p.tanggal, activeShift) : true);
+        !activeShift || activeShift === "all"
+          ? true
+          : (spgId && clockedInSpgIds.has(spgId)) ||
+            (p.tanggal ? isTimestampInShift(p.tanggal, activeShift) : true);
 
       if (belongsToShift) {
         totalPenjualanActiveShift += saleAmount;
@@ -185,23 +199,39 @@ class DashboardService {
       let spgName = "-";
       let spgUsername = "-";
       let spgNoHp = "";
+      let spgShift: string | null = null;
 
       const spgList = Array.isArray(lapak.spg)
         ? lapak.spg
         : lapak.spg
         ? [lapak.spg]
+        : Array.isArray(lapak.users)
+        ? lapak.users
         : [];
 
       if (attendance?.user?.nama) {
         spgName = attendance.user.nama;
         spgUsername = attendance.user.username || "";
         spgNoHp = attendance.user.no_hp || "";
+        const matchedUser = spgList.find(
+          (u) =>
+            (u.username && u.username === attendance.user?.username) ||
+            u.nama === attendance.user?.nama
+        );
+        spgShift =
+          attendance.user.shift ||
+          attendance.shift_spg ||
+          matchedUser?.shift ||
+          null;
       } else if (spgList.length > 0) {
         const primaryUser =
-          spgList.find((u) => (u.shift || "").toLowerCase() === activeShift) || spgList[0];
+          !activeShift || activeShift === "all"
+            ? spgList[0]
+            : spgList.find((u) => (u.shift || "").toLowerCase() === activeShift) || spgList[0];
         spgName = `${primaryUser.nama} (Belum Masuk)`;
         spgUsername = primaryUser.username || "";
         spgNoHp = primaryUser.no_hp || "";
+        spgShift = primaryUser.shift || null;
       }
 
       let closingStatus: StatusLapakRow["closingStatus"] = "belum_closing";
@@ -224,6 +254,8 @@ class DashboardService {
         spgNama: spgName,
         spgUsername,
         spgNoHp,
+        spgShift,
+        rawLapak: lapak,
         jamMasuk: formatJakartaTime(attendance?.jam_masuk),
         jamPulang: formatJakartaTime(attendance?.jam_pulang),
         totalPenjualan: penjualanByLapak.get(lapak.id) || 0,

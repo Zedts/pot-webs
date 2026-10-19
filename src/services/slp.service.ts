@@ -58,10 +58,22 @@ export class SlpService {
     let lapakWithSpg = 0;
     let lapakWithoutSpg = 0;
     for (const l of lapakList) {
-      if (l.spg?.nama || l.spg_id) {
+      const hasSpg =
+        (Array.isArray(l.spg) && l.spg.length > 0) ||
+        Boolean(l.spg && !Array.isArray(l.spg) && (l.spg as any).nama) ||
+        (Array.isArray(l.users) && l.users.length > 0) ||
+        Boolean(l.spg_id);
+      if (hasSpg) {
         lapakWithSpg++;
       } else {
         lapakWithoutSpg++;
+      }
+    }
+
+    let unassignedUsersCount = 0;
+    for (const u of spgUsers) {
+      if (!u.lapak_id) {
+        unassignedUsersCount++;
       }
     }
 
@@ -89,6 +101,7 @@ export class SlpService {
       totalLapak: lapakList.length,
       lapakWithSpg,
       lapakWithoutSpg,
+      unassignedUsersCount,
       totalStokUnits,
       lowStockCount,
       outOfStockCount,

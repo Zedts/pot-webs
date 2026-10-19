@@ -24,6 +24,8 @@ export function SlpSummaryCards({
         subtext={
           isLoading
             ? "Memuat data..."
+            : (summary?.totalLapak ?? 0) > 0 && (summary?.lapakWithoutSpg ?? 0) === 0
+            ? `Semua Lapak Terisi SPG (${summary?.unassignedUsersCount ?? 0} Belum Ada Lapak)`
             : `${summary?.lapakWithSpg ?? 0} Terisi SPG (${summary?.lapakWithoutSpg ?? 0} Perlu Penugasan)`
         }
         isLoading={isLoading}

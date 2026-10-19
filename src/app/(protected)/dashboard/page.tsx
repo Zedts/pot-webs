@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,11 +11,9 @@ import {
 import { SummaryCardsGrid } from "@/components/dashboard/SummaryCardsGrid";
 import { StatusLapakTable } from "@/components/dashboard/StatusLapakTable";
 import { RefreshButton } from "@/components/ui/RefreshButton";
-import { SHIFT_CONFIG, formatJakartaDate } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   AlertCircleIcon,
-  Time04Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 
@@ -105,41 +103,25 @@ export default function DashboardPage() {
     );
   }
 
-  // Admin & Owner View: Operational Dashboard
-  const currentDateStr = data?.date ? formatJakartaDate(data.date) : "Hari Ini";
-  const currentShiftConfig = SHIFT_CONFIG[activeShift];
   const isLoading = (!data && !errorMessage) || isRefreshing;
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
-      {/* Page Title & Shift Information Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
-              Dashboard Operasional
-            </h1>
-            <RefreshButton
-              onClick={() => loadData(true)}
-              isRefreshing={isRefreshing}
-              disabled={isLoading}
-            />
-          </div>
-          <p className="text-xs md:text-sm text-[#6B7280] font-medium mt-0.5">
-            Data real-time presensi, pengiriman, dan ringkasan penjualan hari ini
-          </p>
+      {/* Page Title */}
+      <div>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-xl md:text-2xl font-extrabold text-[#18314E] tracking-tight">
+            Dashboard Operasional
+          </h1>
+          <RefreshButton
+            onClick={() => loadData(true)}
+            isRefreshing={isRefreshing}
+            disabled={isLoading}
+          />
         </div>
-
-        {/* Date & Shift Badge */}
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="px-3 py-1.5 rounded-xl bg-white border border-[#F3E7D8] text-[#18314E] font-bold shadow-2xs">
-            {currentDateStr}
-          </span>
-          <span className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-[#A81B1B] text-white font-bold shadow-2xs">
-            <HugeIcon icon={Time04Icon} size={14} strokeWidth={2} />
-            <span>{currentShiftConfig.label}</span>
-          </span>
-        </div>
+        <p className="text-xs md:text-sm text-[#6B7280] font-medium mt-0.5">
+          Data real-time presensi, pengiriman, dan ringkasan penjualan hari ini
+        </p>
       </div>
 
       {/* Error Alert Banner */}

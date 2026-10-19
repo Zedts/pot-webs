@@ -3,15 +3,14 @@
 import React, { useState, useMemo } from "react";
 import { UserModel } from "@/types/user";
 import { LapakModel } from "@/types/slp";
-import { formatLapakShiftHours } from "@/utils/shift.utils";
 import { SearchableSelect, SelectOption } from "@/components/ui/SearchableSelect";
+import { ShiftBadge } from "@/components/ui/ShiftBadge";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   Search01Icon,
   ViewIcon,
   Edit01Icon,
   Delete02Icon,
-  Time04Icon,
 } from "@hugeicons/core-free-icons";
 
 interface UserTableProps {
@@ -268,12 +267,6 @@ export function UserTable({
                     }
                   })();
 
-                  const shiftBadgeStyle = (() => {
-                    if (!u.shift) return null;
-                    return u.shift.toLowerCase() === "pagi"
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      : "bg-amber-50 text-amber-800 border-amber-200";
-                  })();
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
@@ -311,20 +304,7 @@ export function UserTable({
 
                       {/* Shift Kerja */}
                       <td className="px-5 py-4 font-mono text-xs">
-                        {u.shift ? (
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-semibold ${shiftBadgeStyle}`}>
-                            <HugeIcon icon={Time04Icon} size={12} />
-                            <span>
-                              {u.shift.toLowerCase() === "pagi"
-                                ? `Pagi (${formatLapakShiftHours("pagi", stall)})`
-                                : `Siang (${formatLapakShiftHours("siang", stall)})`}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 italic text-xs">
-                            Belum Diatur
-                          </span>
-                        )}
+                        <ShiftBadge shift={u.shift} lapak={stall} />
                       </td>
 
                       {/* Status */}

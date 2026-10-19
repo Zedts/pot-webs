@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { KategoriModel, CreateKategoriPayload, UpdateKategoriPayload } from "@/types/slp";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { HugeIcon } from "@/components/ui/HugeIcon";
@@ -11,6 +11,7 @@ import {
   Delete02Icon,
   Tick01Icon,
   Tag01Icon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons";
 
 interface KategoriManageModalProps {
@@ -30,15 +31,32 @@ export function KategoriManageModal({
   onUpdate,
   onDelete,
 }: KategoriManageModalProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [newKategori, setNewKategori] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery("");
+      setError(null);
+    }
+  }, [isOpen]);
+
   // Deletion confirm modal state
   const [deletingKategori, setDeletingKategori] = useState<KategoriModel | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Filter kategori list based on search query
+  const filteredList = useMemo(() => {
+    if (!searchQuery.trim()) return kategoriList;
+    const q = searchQuery.toLowerCase().trim();
+    return kategoriList.filter((k) =>
+      k.nama_kategori.toLowerCase().includes(q)
+    );
+  }, [kategoriList, searchQuery]);
 
   if (!isOpen) return null;
 
@@ -172,20 +190,46 @@ export function KategoriManageModal({
           </form>
 
           {/* Category List */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
+          <div className="space-y-2.5 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Daftar Kategori Terdaftar ({kategoriList.length})
+                Daftar Kategori Terdaftar ({filteredList.length})
               </span>
             </div>
 
-            {kategoriList.length === 0 ? (
+            {/* Search Bar */}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <HugeIcon icon={Search01Icon} size={15} />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari kategori produk..."
+                className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#18314E]/20 focus:border-[#18314E] transition-all"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title="Hapus pencarian"
+                >
+                  <HugeIcon icon={Cancel01Icon} size={14} />
+                </button>
+              )}
+            </div>
+
+            {filteredList.length === 0 ? (
               <div className="py-8 text-center text-slate-400 text-sm">
-                Belum ada kategori yang ditambahkan.
+                {searchQuery.trim()
+                  ? `Tidak ada kategori yang cocok dengan "${searchQuery}".`
+                  : "Belum ada kategori yang ditambahkan."}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
-                {kategoriList.map((kat) => (
+                {filteredList.map((kat) => (
                   <div
                     key={kat.id}
                     className="p-3 flex items-center justify-between hover:bg-slate-50/70 transition-colors"

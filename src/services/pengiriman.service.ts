@@ -1,4 +1,4 @@
-﻿import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { ApiEndpoints } from "@/constants/api_endpoints";
 import { ApiResponse } from "@/types/api";
 import {
@@ -223,23 +223,26 @@ export class PengirimanService {
         draftRows.push(row);
       }
 
+      // Status counters across all shipments (no daily filter)
+      if (p.status === "selesai") {
+        totalStatusSelesai++;
+      } else if (p.status === "dikirim_viar" || p.status === "draft") {
+        totalDalamPerjalanan++;
+      }
+
       // Compute metrics if shipment belongs to today
       if (isToday) {
         totalUnitKirim += p.qty_kirim || 0;
         totalVarian += p.total_items || 0;
         if (p.lapak_id) todayLapakIds.add(p.lapak_id);
-
-        if (p.status === "selesai") {
-          totalStatusSelesai++;
-        } else if (p.status === "dikirim_viar" || p.status === "draft") {
-          totalDalamPerjalanan++;
-        }
-
-        if (receipt) {
-          if (receipt.status === "sesuai") totalSesuai++;
-          else if (receipt.status === "selisih") totalSelisih++;
-        }
       }
+    }
+
+    // Receipt verification counters across all penerimaan records (no daily filter)
+    for (const r of penerimaanList) {
+      const s = (r.status || "").toLowerCase().trim();
+      if (s === "sesuai") totalSesuai++;
+      else if (s === "selisih") totalSelisih++;
     }
 
     // Sort rows descending by delivery date / creation time

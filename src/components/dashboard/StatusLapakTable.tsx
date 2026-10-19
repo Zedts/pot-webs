@@ -5,6 +5,8 @@ import { StatusLapakRow } from "@/services/dashboard.service";
 import { ClosingStatusBadge } from "./ClosingStatusBadge";
 import { formatRupiah } from "@/utils/shift.utils";
 import { SearchableSelect, SelectOption } from "@/components/ui/SearchableSelect";
+import { ShiftBadge } from "@/components/ui/ShiftBadge";
+import { useLayout } from "@/context/LayoutContext";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import { Search01Icon } from "@hugeicons/core-free-icons";
 
@@ -20,11 +22,27 @@ const statusClosingOptions: SelectOption[] = [
   { value: "perlu_review", label: "Perlu Review" },
 ];
 
+const shiftFilterOptions: SelectOption[] = [
+  { value: "all", label: "Semua Shift" },
+  { value: "pagi", label: "Shift Pagi" },
+  { value: "siang", label: "Shift Siang" },
+  { value: "unassigned", label: "Belum Ada Shift" },
+];
+
 export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
+  const { activeShift, setActiveShift } = useLayout();
   const [searchTerm, setSearchTerm] = useState("");
   const [closingFilter, setClosingFilter] = useState("all");
+  const [shiftFilter, setShiftFilter] = useState<string>(activeShift || "all");
 
-  // Real-time client-side search filtering and closing status filtering
+  const handleShiftChange = (val: string) => {
+    setShiftFilter(val);
+    if (val === "pagi" || val === "siang" || val === "all") {
+      setActiveShift(val);
+    }
+  };
+
+  // Real-time client-side search, closing status, and shift filtering
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
       // 1. Search query filter
@@ -33,15 +51,24 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
         !query ||
         r.lapakNama.toLowerCase().includes(query) ||
         r.spgNama.toLowerCase().includes(query) ||
-        (r.spgUsername && r.spgUsername.toLowerCase().includes(query));
+        (r.spgUsername && r.spgUsername.toLowerCase().includes(query)) ||
+        (r.spgShift && r.spgShift.toLowerCase().includes(query));
 
       // 2. Closing status filter
       const matchClosing =
         closingFilter === "all" || r.closingStatus === closingFilter;
 
-      return matchSearch && matchClosing;
+      // 3. Shift filter
+      const matchShift =
+        shiftFilter === "all"
+          ? true
+          : shiftFilter === "unassigned"
+          ? !r.spgShift
+          : (r.spgShift || "").toLowerCase() === shiftFilter;
+
+      return matchSearch && matchClosing && matchShift;
     });
-  }, [rows, searchTerm, closingFilter]);
+  }, [rows, searchTerm, closingFilter, shiftFilter]);
 
   return (
     <div className="space-y-3">
@@ -80,6 +107,16 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
               placeholder="Semua Status Closing"
             />
           </div>
+
+          {/* Shift Filter with SearchableSelect */}
+          <div className="min-w-[150px]">
+            <SearchableSelect
+              options={shiftFilterOptions}
+              value={shiftFilter}
+              onChange={handleShiftChange}
+              placeholder="Semua Shift"
+            />
+          </div>
         </div>
 
         <div className="text-xs font-semibold text-[#6B7280] shrink-0 self-end sm:self-center">
@@ -95,6 +132,7 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
             <thead className="bg-[#18314E] text-white text-xs uppercase tracking-wider font-semibold">
               <tr>
                 <th scope="col" className="px-5 py-3.5">SPG</th>
+                <th scope="col" className="px-5 py-3.5">Shift Kerja</th>
                 <th scope="col" className="px-5 py-3.5">Lapak</th>
                 <th scope="col" className="px-5 py-3.5">Masuk</th>
                 <th scope="col" className="px-5 py-3.5">Pulang</th>
@@ -111,6 +149,7 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index} className="animate-pulse">
                     <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded w-28"></div></td>
+                    <td className="px-5 py-4"><div className="h-5 bg-slate-100 rounded-lg w-24"></div></td>
                     <td className="px-5 py-4"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
                     <td className="px-5 py-4"><div className="h-4 bg-slate-100 rounded w-14"></div></td>
                     <td className="px-5 py-4"><div className="h-4 bg-slate-100 rounded w-14"></div></td>
@@ -122,15 +161,15 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
               ) : filteredRows.length === 0 ? (
                 // Empty state
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <p className="text-sm font-semibold text-[#18314E]">
-                        {searchTerm || closingFilter !== "all"
+                        {searchTerm || closingFilter !== "all" || shiftFilter !== "all"
                           ? "Tidak ditemukan lapak yang sesuai filter pencarian"
-                          : "Belum ada data lapak untuk shift ini"}
+                          : "Belum ada data lapak"}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {searchTerm || closingFilter !== "all"
+                        {searchTerm || closingFilter !== "all" || shiftFilter !== "all"
                           ? "Coba gunakan kata kunci atau filter status yang lain."
                           : "Data akan otomatis muncul saat staf mulai bertugas."}
                       </p>
@@ -158,6 +197,11 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
                           {row.spgNoHp && <span>{row.spgNoHp}</span>}
                         </div>
                       </div>
+                    </td>
+
+                    {/* Shift Kerja */}
+                    <td className="px-5 py-4 font-mono text-xs">
+                      <ShiftBadge shift={row.spgShift} lapak={row.rawLapak} />
                     </td>
 
                     {/* Lapak Name */}

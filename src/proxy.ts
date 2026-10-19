@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
@@ -26,12 +26,13 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 4. Protected routes: '/dashboard', '/pengiriman', '/slp', and '/user-management'
+  // 4. Protected routes: '/dashboard', '/pengiriman', '/slp', '/user-management', and '/penjualan'
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/pengiriman") ||
     pathname.startsWith("/slp") ||
-    pathname.startsWith("/user-management")
+    pathname.startsWith("/user-management") ||
+    pathname.startsWith("/penjualan")
   ) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -56,5 +57,7 @@ export const config = {
     "/slp/:path*",
     "/user-management",
     "/user-management/:path*",
+    "/penjualan",
+    "/penjualan/:path*",
   ],
 };

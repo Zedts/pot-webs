@@ -11,13 +11,23 @@ export const SHIFT_CONFIG: Record<ShiftType, { label: string }> = {
 
 export const TIMEZONE_WIB = "Asia/Jakarta";
 
-export function getJakartaDateString(date: Date = new Date()): string {
+export function getJakartaDateString(date?: Date | string | number): string {
+  if (!date) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: TIMEZONE_WIB,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+  }
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: TIMEZONE_WIB,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(date);
+  }).format(d);
 }
 
 export function resolveCurrentActiveShift(date: Date = new Date()): ShiftType {

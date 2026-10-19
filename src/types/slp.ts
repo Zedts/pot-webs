@@ -192,6 +192,7 @@ export interface SpgUserOption {
   username?: string;
   email?: string;
   role: string;
+  lapak_id?: string | null;
   shift?: string | null;
   status?: string;
 }
@@ -200,6 +201,7 @@ export interface SlpSummaryMetrics {
   totalLapak: number;
   lapakWithSpg: number;
   lapakWithoutSpg: number;
+  unassignedUsersCount: number;
   totalStokUnits: number;
   lowStockCount: number;
   outOfStockCount: number;

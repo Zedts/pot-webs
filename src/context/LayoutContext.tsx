@@ -7,15 +7,17 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { ShiftType, resolveCurrentActiveShift } from "@/utils/shift.utils";
+import { ShiftType } from "@/utils/shift.utils";
+
+export type ActiveShiftFilter = ShiftType | "all";
 
 interface LayoutContextType {
   isDesktopCollapsed: boolean;
   isMobileOpen: boolean;
-  activeShift: ShiftType;
+  activeShift: ActiveShiftFilter;
   toggleSidebar: () => void;
   closeMobileSidebar: () => void;
-  setActiveShift: (shift: ShiftType) => void;
+  setActiveShift: (shift: ActiveShiftFilter) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -23,12 +25,7 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [activeShift, setActiveShift] = useState<ShiftType>("pagi");
-
-  // Set initial shift based on current time after mount (avoids prerender mismatch)
-  useEffect(() => {
-    setActiveShift(resolveCurrentActiveShift());
-  }, []);
+  const [activeShift, setActiveShift] = useState<ActiveShiftFilter>("all");
 
   const toggleSidebar = useCallback(() => {
     if (window.innerWidth < 768) {

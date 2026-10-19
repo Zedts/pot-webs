@@ -61,13 +61,20 @@ export function PengirimanSummaryCards({
       {/* 5. Total Sesuai & Selisih */}
       <MetricCard
         title="Total Sesuai & Selisih"
-        value={isLoading ? "-" : `${sesuaiCount} Sesuai`}
-        subtext={
-          isLoading
-            ? undefined
-            : `${selisihCount} Selisih Qty`
+        value={
+          isLoading ? (
+            "-"
+          ) : (
+            <div className="flex items-center gap-1.5 whitespace-nowrap text-lg xl:text-xl font-extrabold tracking-tight">
+              <span className="text-[#10B981]">{sesuaiCount} Sesuai</span>
+              <span className="text-slate-300 font-normal">|</span>
+              <span className={selisihCount > 0 ? "text-[#EF4444]" : "text-slate-400"}>
+                {selisihCount} Selisih
+              </span>
+            </div>
+          )
         }
-        valueColor={selisihCount > 0 ? "text-[#EF4444]" : "text-[#10B981]"}
+        subtext={isLoading ? undefined : "Status Verifikasi Penerimaan"}
         isLoading={isLoading}
       />
     </div>
