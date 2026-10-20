@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Types and Data Contracts for Pengiriman & Penerimaan Modules
  */
 
@@ -21,6 +21,7 @@ export interface LapakSimple {
   lokasi?: string;
   shift_pagi?: [string, string];
   shift_siang?: [string, string];
+  shift_long?: [string, string];
   spg?: {
     id?: string;
     nama: string;

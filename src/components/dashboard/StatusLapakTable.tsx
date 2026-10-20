@@ -26,7 +26,7 @@ const shiftFilterOptions: SelectOption[] = [
   { value: "all", label: "Semua Shift" },
   { value: "pagi", label: "Shift Pagi" },
   { value: "siang", label: "Shift Siang" },
-  { value: "unassigned", label: "Belum Ada Shift" },
+  { value: "long_shift", label: "Long Shift" },
 ];
 
 export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
@@ -35,9 +35,13 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
   const [closingFilter, setClosingFilter] = useState("all");
   const [shiftFilter, setShiftFilter] = useState<string>(activeShift || "all");
 
+  React.useEffect(() => {
+    setShiftFilter(activeShift || "all");
+  }, [activeShift]);
+
   const handleShiftChange = (val: string) => {
     setShiftFilter(val);
-    if (val === "pagi" || val === "siang" || val === "all") {
+    if (val === "pagi" || val === "siang" || val === "long_shift" || val === "all") {
       setActiveShift(val);
     }
   };
@@ -62,8 +66,6 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
       const matchShift =
         shiftFilter === "all"
           ? true
-          : shiftFilter === "unassigned"
-          ? !r.spgShift
           : (r.spgShift || "").toLowerCase() === shiftFilter;
 
       return matchSearch && matchClosing && matchShift;
@@ -120,7 +122,7 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
         </div>
 
         <div className="text-xs font-semibold text-[#6B7280] shrink-0 self-end sm:self-center">
-          Total: <span className="text-[#18314E] font-bold">{filteredRows.length} Lapak</span>
+          Total: <span className="text-[#18314E] font-bold">{filteredRows.length} SPG / Staf</span>
         </div>
       </div>
 
@@ -165,8 +167,8 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <p className="text-sm font-semibold text-[#18314E]">
                         {searchTerm || closingFilter !== "all" || shiftFilter !== "all"
-                          ? "Tidak ditemukan lapak yang sesuai filter pencarian"
-                          : "Belum ada data lapak"}
+                          ? "Tidak ditemukan staf yang sesuai filter pencarian"
+                          : "Belum ada data staf bertugas"}
                       </p>
                       <p className="text-xs text-slate-400">
                         {searchTerm || closingFilter !== "all" || shiftFilter !== "all"
@@ -180,13 +182,20 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
                 // Active table rows
                 filteredRows.map((row) => (
                   <tr
-                    key={row.lapakId}
+                    key={row.userId ? `${row.userId}-${row.lapakId}` : `${row.lapakId}-${row.spgUsername || row.spgNama}-${row.spgShift}`}
                     className="hover:bg-slate-50/70 transition-colors"
                   >
                     {/* SPG Name */}
                     <td className="px-5 py-4 font-medium text-slate-800">
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-900">{row.spgNama}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900">{row.spgNama}</span>
+                          {row.statusAbsensi === "izin" && (
+                            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded">
+                              Izin
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-normal mt-0.5">
                           {row.spgUsername && row.spgUsername !== "-" && (
                             <span>@{row.spgUsername}</span>
@@ -211,12 +220,23 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
 
                     {/* Masuk */}
                     <td className="px-5 py-4 text-slate-600 font-mono text-xs">
-                      {row.jamMasuk}
+                      {row.statusAbsensi === "izin" ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200"
+                          title={row.keteranganAbsensi ? `Alasan Izin: ${row.keteranganAbsensi}` : "Izin Tercatat"}
+                        >
+                          Izin {row.keteranganAbsensi ? `(${row.keteranganAbsensi})` : ""}
+                        </span>
+                      ) : (
+                        row.jamMasuk
+                      )}
                     </td>
 
                     {/* Pulang */}
                     <td className="px-5 py-4 font-mono text-xs">
-                      {row.jamPulang === "-" ? (
+                      {row.statusAbsensi === "izin" ? (
+                        <span className="text-slate-300 italic">-</span>
+                      ) : row.jamPulang === "-" ? (
                         <span className="text-slate-400 font-bold">-</span>
                       ) : (
                         <span className="text-slate-600">{row.jamPulang}</span>
@@ -246,7 +266,7 @@ export function StatusLapakTable({ rows, isLoading }: StatusLapakTableProps) {
 
         {/* Standard Table Footer */}
         <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Menampilkan {filteredRows.length} dari {rows.length} outlet lapak</span>
+          <span>Menampilkan {filteredRows.length} dari {rows.length} staf bertugas</span>
         </div>
       </div>
     </div>

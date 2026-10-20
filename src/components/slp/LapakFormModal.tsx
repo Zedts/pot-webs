@@ -62,6 +62,8 @@ export function LapakFormModal({
   const [shiftPagiEnd, setShiftPagiEnd] = useState("16:00");
   const [shiftSiangStart, setShiftSiangStart] = useState("13:00");
   const [shiftSiangEnd, setShiftSiangEnd] = useState("21:00");
+  const [shiftLongStart, setShiftLongStart] = useState("08:00");
+  const [shiftLongEnd, setShiftLongEnd] = useState("20:00");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -80,6 +82,8 @@ export function LapakFormModal({
         setShiftPagiEnd(targetLapak.shift_pagi ? targetLapak.shift_pagi[1] : "16:00");
         setShiftSiangStart(targetLapak.shift_siang ? targetLapak.shift_siang[0] : "13:00");
         setShiftSiangEnd(targetLapak.shift_siang ? targetLapak.shift_siang[1] : "21:00");
+        setShiftLongStart(targetLapak.shift_long ? targetLapak.shift_long[0] : "08:00");
+        setShiftLongEnd(targetLapak.shift_long ? targetLapak.shift_long[1] : "20:00");
       } else {
         setNama("");
         setLokasi("");
@@ -92,6 +96,8 @@ export function LapakFormModal({
         setShiftPagiEnd("16:00");
         setShiftSiangStart("13:00");
         setShiftSiangEnd("21:00");
+        setShiftLongStart("08:00");
+        setShiftLongEnd("20:00");
       }
       setShowUserPicker(false);
       setPickerSelection("");
@@ -150,6 +156,7 @@ export function LapakFormModal({
         spg_ids: selectedSpgIds,
         shift_pagi: [shiftPagiStart, shiftPagiEnd],
         shift_siang: [shiftSiangStart, shiftSiangEnd],
+        shift_long: [shiftLongStart, shiftLongEnd],
       };
 
       await onSubmit(payload, initialStaffIds);
@@ -419,6 +426,25 @@ export function LapakFormModal({
                     className="flex-1 p-1.5 bg-white border border-slate-200 rounded-lg text-center font-mono"
                   />
                 </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 space-y-2">
+              <span className="text-xs font-semibold text-slate-700">Long Shift</span>
+              <div className="flex items-center gap-2 text-xs">
+                <input
+                  type="time"
+                  value={shiftLongStart}
+                  onChange={(e) => setShiftLongStart(e.target.value)}
+                  className="flex-1 p-1.5 bg-white border border-slate-200 rounded-lg text-center font-mono"
+                />
+                <span>-</span>
+                <input
+                  type="time"
+                  value={shiftLongEnd}
+                  onChange={(e) => setShiftLongEnd(e.target.value)}
+                  className="flex-1 p-1.5 bg-white border border-slate-200 rounded-lg text-center font-mono"
+                />
               </div>
             </div>
           </div>

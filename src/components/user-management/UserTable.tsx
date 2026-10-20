@@ -37,6 +37,7 @@ const shiftFilterOptions: SelectOption[] = [
   { value: "all", label: "Semua Shift" },
   { value: "pagi", label: "Shift Pagi" },
   { value: "siang", label: "Shift Siang" },
+  { value: "long_shift", label: "Long Shift" },
   { value: "unassigned", label: "Belum Ada Shift" },
 ];
 

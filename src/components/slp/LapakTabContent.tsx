@@ -356,6 +356,27 @@ export function LapakTabContent({
                             </span>
                           )}
                         </div>
+
+                        {/* Long Shift */}
+                        <div
+                          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg w-fit mt-1 transition-all ${
+                            currentActiveShift === "long_shift"
+                              ? "bg-blue-50 text-blue-800 font-bold border border-blue-200"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          {currentActiveShift === "long_shift" && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                          )}
+                          <span>
+                            Long: {lapak.shift_long ? `${lapak.shift_long[0]} - ${lapak.shift_long[1]}` : "08:00 - 20:00"} WIB
+                          </span>
+                          {currentActiveShift === "long_shift" && (
+                            <span className="text-[10px] font-semibold text-blue-600 bg-blue-100/70 px-1 rounded">
+                              Aktif
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Aksi: 1. Preview, 2. Edit, 3. Delete */}

@@ -2,11 +2,12 @@
  * Shift & Jakarta (WIB) Timezone Utilities
  */
 
-export type ShiftType = "pagi" | "siang";
+export type ShiftType = "pagi" | "siang" | "long_shift";
 
 export const SHIFT_CONFIG: Record<ShiftType, { label: string }> = {
   pagi: { label: "Shift Pagi" },
   siang: { label: "Shift Siang" },
+  long_shift: { label: "Long Shift" },
 };
 
 export const TIMEZONE_WIB = "Asia/Jakarta";
@@ -140,7 +141,9 @@ export function isTimestampInShift(timestamp: Date | string | number, shift: Shi
       }).format(d),
       10
     );
-    return shift === "pagi" ? hour >= 6 && hour < 13 : hour >= 13;
+    if (shift === "pagi") return hour >= 6 && hour < 13;
+    if (shift === "long_shift") return hour >= 6 && hour < 22;
+    return hour >= 13;
   } catch {
     return false;
   }
@@ -159,7 +162,11 @@ export function formatRupiah(value: number | string | null | undefined): string 
  */
 export function formatLapakShiftHours(
   shift: ShiftType | string | null | undefined,
-  lapak?: { shift_pagi?: [string, string] | null; shift_siang?: [string, string] | null } | null,
+  lapak?: {
+    shift_pagi?: [string, string] | null;
+    shift_siang?: [string, string] | null;
+    shift_long?: [string, string] | null;
+  } | null,
   withWib: boolean = true
 ): string {
   if (!shift) return "";
@@ -176,6 +183,12 @@ export function formatLapakShiftHours(
       return `${lapak.shift_siang[0]} - ${lapak.shift_siang[1]}${suffix}`;
     }
     return `13:00 - 21:00${suffix}`;
+  }
+  if (normalized === "long_shift" || normalized === "long" || normalized === "long shift") {
+    if (lapak?.shift_long && Array.isArray(lapak.shift_long) && lapak.shift_long.length === 2) {
+      return `${lapak.shift_long[0]} - ${lapak.shift_long[1]}${suffix}`;
+    }
+    return `08:00 - 20:00${suffix}`;
   }
   return "";
 }

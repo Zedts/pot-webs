@@ -64,9 +64,11 @@ export function UserDetailModal({
     if (!user.shift) return "Belum Diatur";
     const hours = formatLapakShiftHours(user.shift, lapak);
     const bracket = hours ? ` (${hours})` : "";
-    return user.shift.toLowerCase() === "pagi"
-      ? `Shift Pagi${bracket}`
-      : `Shift Siang${bracket}`;
+    const s = user.shift.toLowerCase().trim();
+    if (s === "pagi") return `Shift Pagi${bracket}`;
+    if (s === "siang") return `Shift Siang${bracket}`;
+    if (s === "long_shift" || s === "long" || s === "long shift") return `Long Shift${bracket}`;
+    return `${user.shift}${bracket}`;
   })();
 
   const formattedCreatedAt = user.createdAt

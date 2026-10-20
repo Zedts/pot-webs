@@ -49,6 +49,7 @@ export interface LapakModel {
   users?: LapakAssignedUser[];
   shift_pagi: [string, string];
   shift_siang: [string, string];
+  shift_long?: [string, string];
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -64,6 +65,7 @@ export interface CreateLapakPayload {
   radius_meter?: number;
   shift_pagi?: [string, string];
   shift_siang?: [string, string];
+  shift_long?: [string, string];
 }
 
 export interface UpdateLapakPayload {
@@ -77,6 +79,7 @@ export interface UpdateLapakPayload {
   radius_meter?: number;
   shift_pagi?: [string, string];
   shift_siang?: [string, string];
+  shift_long?: [string, string];
 }
 
 export interface StokLapakModel {

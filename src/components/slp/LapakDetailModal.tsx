@@ -116,7 +116,7 @@ export function LapakDetailModal({ lapak, isOpen, onClose }: LapakDetailModalPro
               <HugeIcon icon={Time04Icon} size={18} strokeWidth={2} />
               <span>Jam Operasional Shift</span>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3 bg-white rounded-xl border border-[#F3E7D8]">
                 <span className="font-bold text-[#A81B1B] block">Shift Pagi</span>
                 <span className="font-mono font-semibold text-slate-700 text-sm mt-0.5 block">
@@ -127,6 +127,12 @@ export function LapakDetailModal({ lapak, isOpen, onClose }: LapakDetailModalPro
                 <span className="font-bold text-[#A81B1B] block">Shift Siang</span>
                 <span className="font-mono font-semibold text-slate-700 text-sm mt-0.5 block">
                   {lapak.shift_siang ? `${lapak.shift_siang[0]} - ${lapak.shift_siang[1]}` : "13:00 - 21:00"} WIB {currentActiveShift === "siang" ? "(Aktif)" : ""}
+                </span>
+              </div>
+              <div className="p-3 bg-white rounded-xl border border-[#F3E7D8]">
+                <span className="font-bold text-[#A81B1B] block">Long Shift</span>
+                <span className="font-mono font-semibold text-slate-700 text-sm mt-0.5 block">
+                  {lapak.shift_long ? `${lapak.shift_long[0]} - ${lapak.shift_long[1]}` : "08:00 - 20:00"} WIB {currentActiveShift === "long_shift" ? "(Aktif)" : ""}
                 </span>
               </div>
             </div>

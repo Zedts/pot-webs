@@ -98,6 +98,7 @@ export function UserEditModal({
 
     const pagiHours = formatLapakShiftHours("pagi", currentTargetLapak);
     const siangHours = formatLapakShiftHours("siang", currentTargetLapak);
+    const longHours = formatLapakShiftHours("long_shift", currentTargetLapak);
 
     return [
       {
@@ -109,6 +110,11 @@ export function UserEditModal({
         value: "siang",
         label: "Shift Siang",
         sublabel: `${siangHours} (${currentTargetLapak.nama})`,
+      },
+      {
+        value: "long_shift",
+        label: "Long Shift",
+        sublabel: `${longHours} (${currentTargetLapak.nama})`,
       },
       {
         value: "none",

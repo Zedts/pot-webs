@@ -1,4 +1,4 @@
-﻿export type UserRole =
+export type UserRole =
   | 'owner'
   | 'admin'
   | 'spg'
@@ -14,7 +14,7 @@ export interface UserModel {
   email: string;
   role: UserRole;
   lapak_id?: string | null;
-  shift?: 'pagi' | 'siang' | null;
+  shift?: 'pagi' | 'siang' | 'long_shift' | null;
   no_hp: string;
   status: string;
   authProvider: string;
