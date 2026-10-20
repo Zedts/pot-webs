@@ -316,7 +316,14 @@ export function PenjualanTable({
 
                     {/* 4. Metode Pembayaran */}
                     <td className="px-5 py-4">
-                      <PenjualanPaymentBadge method={row.metodePembayaran} />
+                      <div className="flex flex-col gap-1 items-start">
+                        <PenjualanPaymentBadge method={row.metodePembayaran} />
+                        {Boolean(row.kembalianDisimpan && row.kembalianDisimpan > 0) && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-[#E67E22] border border-amber-200">
+                            Simpan: {formatRupiah(row.kembalianDisimpan!)}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* 5. Total Transaksi */}

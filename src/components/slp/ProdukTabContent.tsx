@@ -18,6 +18,7 @@ import { SatuanManageModal } from "./SatuanManageModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { showToast } from "@/lib/toast";
 import { SearchableSelect, SelectOption } from "@/components/ui/SearchableSelect";
+import { formatRupiah } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   Search01Icon,
@@ -49,14 +50,6 @@ interface ProdukTabContentProps {
   onDeleteSatuan: (id: string) => Promise<void>;
 }
 
-function formatRupiah(value: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export function ProdukTabContent({
   rows,

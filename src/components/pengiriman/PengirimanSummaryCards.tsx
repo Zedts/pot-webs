@@ -65,12 +65,28 @@ export function PengirimanSummaryCards({
           isLoading ? (
             "-"
           ) : (
-            <div className="flex items-center gap-1.5 whitespace-nowrap text-lg xl:text-xl font-extrabold tracking-tight">
-              <span className="text-[#10B981]">{sesuaiCount} Sesuai</span>
-              <span className="text-slate-300 font-normal">|</span>
-              <span className={selisihCount > 0 ? "text-[#EF4444]" : "text-slate-400"}>
-                {selisihCount} Selisih
-              </span>
+            <div className="flex items-center justify-around gap-2 w-full max-w-[200px]">
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-lg xl:text-xl font-extrabold text-[#10B981] leading-none">
+                  {sesuaiCount}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                  Sesuai
+                </span>
+              </div>
+              <div className="h-6 w-px bg-slate-200 shrink-0" />
+              <div className="flex flex-col items-center flex-1">
+                <span
+                  className={`text-lg xl:text-xl font-extrabold leading-none ${
+                    selisihCount > 0 ? "text-[#EF4444]" : "text-slate-400"
+                  }`}
+                >
+                  {selisihCount}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                  Selisih
+                </span>
+              </div>
             </div>
           )
         }

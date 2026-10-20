@@ -2,7 +2,12 @@
 
 import React, { useState, useMemo } from "react";
 import { LapakModel, SpgUserOption, AbsensiSummaryItem } from "@/types/slp";
-import { resolveCurrentActiveShift, formatJakartaTime } from "@/utils/shift.utils";
+import {
+  resolveCurrentActiveShift,
+  formatJakartaTime,
+  formatShiftLabel,
+  formatShiftName,
+} from "@/utils/shift.utils";
 import { LapakFormModal } from "./LapakFormModal";
 import { LapakDetailModal } from "./LapakDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -250,7 +255,7 @@ export function LapakTabContent({
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                                       <span>{attendance.user.nama}</span>
                                       <span className="text-[10px] text-emerald-600 font-medium">
-                                        ({attendance.jam_masuk ? formatJakartaTime(attendance.jam_masuk) : "Hadir"} • Shift {attendance.shift ? (attendance.shift.toLowerCase() === "pagi" ? "Pagi" : "Siang") : (currentActiveShift === "pagi" ? "Pagi" : "Siang")})
+                                        ({attendance.jam_masuk ? formatJakartaTime(attendance.jam_masuk) : "Hadir"} • {formatShiftName(attendance.shift || currentActiveShift)})
                                       </span>
                                     </div>
                                     {(attendance.user.username || (attendance.user as any).no_hp) && (
@@ -265,8 +270,9 @@ export function LapakTabContent({
 
                                 {/* Scheduled staff (up to limit) */}
                                 {visibleScheduled.map((u, i) => {
-                                  const isShiftActive = (u.shift || "").toLowerCase() === currentActiveShift;
-                                  const shiftLabel = u.shift ? (u.shift.toLowerCase() === "pagi" ? "Pagi" : "Siang") : null;
+                                  const uShift = (u.shift || "").toLowerCase().trim();
+                                  const isShiftActive = uShift === currentActiveShift || uShift === "long_shift" || uShift === "long";
+                                  const shiftLabel = formatShiftLabel(u.shift);
 
                                   return (
                                     <div

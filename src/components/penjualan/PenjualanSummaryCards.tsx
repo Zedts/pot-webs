@@ -28,7 +28,7 @@ export function PenjualanSummaryCards({
   const tunaiCount = summary?.tunai?.count ?? 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {/* Card 1: Total Transaksi Penjualan Hari Ini */}
       <MetricCard
         title="Transaksi Hari Ini"
@@ -55,19 +55,55 @@ export function PenjualanSummaryCards({
         isLoading={isLoading}
       />
 
-      {/* Card 3: Metode Pembayaran (Special in function, identical in UI card) */}
+      {/* Card 3: Kembalian Disimpan (Keep Changes) */}
+      <MetricCard
+        title="Kembalian Disimpan Hari Ini"
+        value={
+          isLoading ? "..." : formatRupiah(summary?.totalKembalianDisimpan ?? 0)
+        }
+        subtext={
+          isLoading
+            ? "Memuat data kembalian..."
+            : `Akumulasi dari ${summary?.kembalianDisimpanCount ?? 0} transaksi hari ini`
+        }
+        valueColor="text-[#E67E22]"
+        isLoading={isLoading}
+      />
+
+      {/* Card 4: Metode Pembayaran (Special in function, identical in UI card) */}
       <MetricCard
         title="Metode Pembayaran"
         value={
           isLoading ? (
             "..."
           ) : (
-            <div className="flex items-center gap-2 whitespace-nowrap text-lg xl:text-xl font-extrabold tracking-tight">
-              <span className="text-purple-700">{qrisCount} QRIS</span>
-              <span className="text-slate-300 font-normal">|</span>
-              <span className="text-blue-700">{transferCount} Transfer</span>
-              <span className="text-slate-300 font-normal">|</span>
-              <span className="text-emerald-700">{tunaiCount} Tunai</span>
+            <div className="flex items-center justify-between gap-1 w-full max-w-[240px]">
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-lg xl:text-xl font-extrabold text-purple-700 leading-none">
+                  {qrisCount}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                  QRIS
+                </span>
+              </div>
+              <div className="h-6 w-px bg-slate-200 shrink-0" />
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-lg xl:text-xl font-extrabold text-blue-700 leading-none">
+                  {transferCount}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                  Transfer
+                </span>
+              </div>
+              <div className="h-6 w-px bg-slate-200 shrink-0" />
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-lg xl:text-xl font-extrabold text-emerald-700 leading-none">
+                  {tunaiCount}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                  Tunai
+                </span>
+              </div>
             </div>
           )
         }

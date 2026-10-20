@@ -79,6 +79,9 @@ export class PenjualanService {
       if (payload.catatan !== undefined) {
         formData.append("catatan", payload.catatan);
       }
+      if (payload.kembalian_disimpan !== undefined) {
+        formData.append("kembalian_disimpan", String(payload.kembalian_disimpan));
+      }
 
       const response = await apiClient.put<PenjualanModel>(
         `${ApiEndpoints.penjualan}/${id}`,
@@ -94,6 +97,9 @@ export class PenjualanService {
     }
     if (payload.catatan !== undefined) {
       body.catatan = payload.catatan;
+    }
+    if (payload.kembalian_disimpan !== undefined) {
+      body.kembalian_disimpan = payload.kembalian_disimpan;
     }
     if (payload.bukti_bayar_url !== undefined) {
       body.bukti_bayar_url = payload.bukti_bayar_url;
@@ -128,9 +134,10 @@ export class PenjualanService {
     const todayStr = targetDateStr || getJakartaDateString();
 
     const todaySales = sales.filter((s) => {
-      if (!s.tanggal) return false;
+      const rawDate = s.tanggal || s.createdAt;
+      if (!rawDate) return false;
       try {
-        const itemDateStr = getJakartaDateString(new Date(s.tanggal));
+        const itemDateStr = getJakartaDateString(new Date(rawDate));
         return itemDateStr === todayStr;
       } catch {
         return false;
@@ -144,10 +151,18 @@ export class PenjualanService {
     let transferNominal = 0;
     let tunaiCount = 0;
     let tunaiNominal = 0;
+    let totalKembalianDisimpan = 0;
+    let kembalianDisimpanCount = 0;
 
     for (const sale of todaySales) {
       const price = Number(sale.total_harga || 0);
       todayRevenue += price;
+
+      const changeKept = Number(sale.kembalian_disimpan ?? sale.keep_changes ?? 0);
+      if (changeKept > 0) {
+        totalKembalianDisimpan += changeKept;
+        kembalianDisimpanCount++;
+      }
 
       const method = (sale.metode_pembayaran || "tunai").toLowerCase().trim();
       if (method === "qris") {
@@ -182,6 +197,8 @@ export class PenjualanService {
         totalNominal: tunaiNominal,
         percentage: todayRevenue > 0 ? (tunaiNominal / todayRevenue) * 100 : 0,
       },
+      totalKembalianDisimpan,
+      kembalianDisimpanCount,
     };
   }
 
@@ -211,6 +228,7 @@ export class PenjualanService {
         spgNoHp: s.spg?.no_hp,
         totalHarga: Number(s.total_harga || 0),
         totalItemsCount: totalItems,
+        kembalianDisimpan: Number(s.kembalian_disimpan ?? s.keep_changes ?? 0),
         catatan: s.catatan || "",
         hasBukti: Boolean(s.bukti_bayar_url || s.bukti_qris_url),
         raw: s,

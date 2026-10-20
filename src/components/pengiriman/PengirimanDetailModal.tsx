@@ -93,12 +93,27 @@ export function PengirimanDetailModal({
           ) : data ? (
             <>
               {/* Top Details Card */}
-              <div className="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                 <div>
                   <span className="text-slate-400 block font-medium">Outlet Tujuan</span>
                   <span className="font-bold text-slate-800 text-sm mt-0.5 block">
                     {data.lapak?.nama || "-"}
                   </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-medium">Petugas Pengirim</span>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="font-bold text-slate-800 text-sm">
+                      {data.pengirim?.nama || "-"}
+                    </span>
+                    {(data.pengirim?.username || data.pengirim?.no_hp) && (
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                        {data.pengirim.username && <span>@{data.pengirim.username}</span>}
+                        {data.pengirim.username && data.pengirim.no_hp && <span>•</span>}
+                        {data.pengirim.no_hp && <span>{data.pengirim.no_hp}</span>}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-medium">Tanggal Pengiriman</span>

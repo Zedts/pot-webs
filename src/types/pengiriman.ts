@@ -60,6 +60,8 @@ export interface PengirimanModel {
   lapak?: LapakSimple | null;
   created_by: string;
   creator?: CreatorSimple | null;
+  pengirim_id?: string | null;
+  pengirim?: CreatorSimple | null;
   status: PengirimanStatus;
   total_items: number;
   qty_kirim: number;
@@ -107,12 +109,14 @@ export interface CreatePengirimanItem {
 export interface CreatePengirimanPayload {
   tanggal: string;
   lapak_id: string;
+  pengirim_id: string;
   items: CreatePengirimanItem[];
 }
 
 export interface UpdatePengirimanPayload {
   tanggal?: string;
   lapak_id?: string;
+  pengirim_id?: string;
   status?: PengirimanStatus;
 }
 
@@ -133,6 +137,7 @@ export interface PengirimanTableRow {
   uniqueId: string;
   lapakNama: string;
   lapakId: string;
+  pengirimNama?: string;
   penerimaSpg: string;
   penerimaUsername?: string;
   penerimaNoHp?: string;

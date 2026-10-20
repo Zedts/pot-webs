@@ -205,6 +205,7 @@ export class PengirimanService {
         uniqueId: p.unique_id || `#PG-${p.id.slice(-6).toUpperCase()}`,
         lapakNama: lapak?.nama || "Lapak Tidak Ditemukan",
         lapakId: p.lapak_id,
+        pengirimNama: p.pengirim?.nama || p.creator?.nama || "-",
         penerimaSpg: receiver.nama,
         penerimaUsername: receiver.username,
         penerimaNoHp: receiver.no_hp,

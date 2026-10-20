@@ -15,12 +15,13 @@ import {
   DashboardSquare01Icon,
   DeliveryTruck01Icon,
   PackageIcon,
-  Invoice01Icon,
   Time04Icon,
   Money03Icon,
   Settings02Icon,
   Logout01Icon,
   Profile,
+  Invoice03Icon,
+  FileCheckIcon,
 } from "@hugeicons/core-free-icons";
 
 interface NavItem {
@@ -35,8 +36,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Pengiriman", href: "/pengiriman", icon: DeliveryTruck01Icon },
   { label: "Stok Lapak Produk", href: "/slp", icon: PackageIcon },
   { label: "User Management", href: "/user-management", icon: Profile, adminOnly: true },
-  { label: "Penjualan", href: "/penjualan", icon: Invoice01Icon },
+  { label: "Penjualan", href: "/penjualan", icon: Invoice03Icon },
   { label: "Absensi", href: "/absensi", icon: Time04Icon },
+  { label: "Closingan", href: "/closingan", icon: FileCheckIcon },
   { label: "Payroll", href: "/payroll", icon: Money03Icon, adminOnly: true },
   { label: "Pengaturan", href: "/pengaturan", icon: Settings02Icon },
 ];

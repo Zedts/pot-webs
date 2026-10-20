@@ -270,6 +270,16 @@ export function PenjualanDetailModal({
                           {formatRupiah(data.total_harga)}
                         </td>
                       </tr>
+                      {Boolean((data.kembalian_disimpan ?? data.keep_changes ?? 0) > 0) && (
+                        <tr className="bg-amber-50/50 text-[#E67E22] border-t border-amber-200/60">
+                          <td colSpan={4} className="px-3.5 py-2 text-right text-xs">
+                            Kembalian Disimpan (Keep Changes):
+                          </td>
+                          <td className="px-3.5 py-2 text-right font-mono text-xs font-bold">
+                            {formatRupiah(data.kembalian_disimpan ?? data.keep_changes ?? 0)}
+                          </td>
+                        </tr>
+                      )}
                     </tfoot>
                   </table>
                 </div>

@@ -67,6 +67,7 @@ export function PengirimanTable({
         r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.uniqueId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.lapakNama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.pengirimNama && r.pengirimNama.toLowerCase().includes(searchTerm.toLowerCase())) ||
         r.penerimaSpg.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchStatus =
@@ -170,7 +171,7 @@ export function PengirimanTable({
                 <th className="px-5 py-3.5">Lapak Tujuan</th>
                 <th className="px-5 py-3.5">Tanggal</th>
                 <th className="px-5 py-3.5 text-center">Unit Kirim</th>
-                <th className="px-5 py-3.5">Petugas / Penerima</th>
+                <th className="px-5 py-3.5">Pengirim & Penerima</th>
                 <th className="px-5 py-3.5">Status</th>
                 <th className="px-5 py-3.5 text-right">Aksi</th>
               </tr>
@@ -211,15 +212,15 @@ export function PengirimanTable({
                       {r.qtyKirim} unit
                     </td>
                     <td className="px-5 py-4 text-xs text-slate-700">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-800">{r.penerimaSpg}</span>
-                        {(r.penerimaUsername || r.penerimaNoHp) && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-normal mt-0.5">
-                            {r.penerimaUsername && <span>@{r.penerimaUsername}</span>}
-                            {r.penerimaUsername && r.penerimaNoHp && <span>•</span>}
-                            {r.penerimaNoHp && <span>{r.penerimaNoHp}</span>}
-                          </div>
-                        )}
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Kirim:</span>
+                          <span className="font-semibold text-slate-800">{r.pengirimNama || "-"}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Terima:</span>
+                          <span className="text-slate-600">{r.penerimaSpg}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-5 py-4">

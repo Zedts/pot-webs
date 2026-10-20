@@ -76,7 +76,7 @@ export function KonfirmasiPengirimanTable({
             <tr>
               <th scope="col" className="px-5 py-3.5">No. DO</th>
               <th scope="col" className="px-5 py-3.5">Tujuan Lapak</th>
-              <th scope="col" className="px-5 py-3.5">Penerima (SPG)</th>
+              <th scope="col" className="px-5 py-3.5">Pengirim & Penerima</th>
               <th scope="col" className="px-5 py-3.5">Waktu Dibuat</th>
               <th scope="col" className="px-5 py-3.5">Total Muatan</th>
               <th scope="col" className="px-5 py-3.5">Status</th>
@@ -135,19 +135,17 @@ export function KonfirmasiPengirimanTable({
                     {row.lapakNama}
                   </td>
 
-                  {/* Penerima SPG */}
+                  {/* Pengirim & Penerima SPG */}
                   <td className="px-5 py-4 text-xs">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-slate-800">
-                        {row.penerimaSpg}
-                      </span>
-                      {(row.penerimaUsername || row.penerimaNoHp) && (
-                        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
-                          {row.penerimaUsername && <span>@{row.penerimaUsername}</span>}
-                          {row.penerimaUsername && row.penerimaNoHp && <span>•</span>}
-                          {row.penerimaNoHp && <span>{row.penerimaNoHp}</span>}
-                        </div>
-                      )}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Kirim:</span>
+                        <span className="font-semibold text-slate-800">{row.pengirimNama || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Terima:</span>
+                        <span className="text-slate-600">{row.penerimaSpg}</span>
+                      </div>
                     </div>
                   </td>
 

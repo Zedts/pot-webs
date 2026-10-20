@@ -19,6 +19,8 @@ export interface PenjualanModel {
   metode_pembayaran: MetodePembayaranType | string;
   bukti_bayar_url?: string | null;
   bukti_qris_url?: string | null;
+  kembalian_disimpan?: number;
+  keep_changes?: number;
   catatan?: string;
   spg?: UserModel | null;
   spg_id?: string;
@@ -41,6 +43,8 @@ export interface PenjualanSummaryMetrics {
   qris: PaymentMethodMetrics;
   transfer: PaymentMethodMetrics;
   tunai: PaymentMethodMetrics;
+  totalKembalianDisimpan: number;
+  kembalianDisimpanCount: number;
 }
 
 export interface PenjualanTableRow {
@@ -56,6 +60,7 @@ export interface PenjualanTableRow {
   spgNoHp?: string;
   totalHarga: number;
   totalItemsCount: number;
+  kembalianDisimpan?: number;
   catatan?: string;
   hasBukti: boolean;
   raw: PenjualanModel;
@@ -64,6 +69,7 @@ export interface PenjualanTableRow {
 export interface UpdatePenjualanPayload {
   metode_pembayaran?: string;
   catatan?: string;
+  kembalian_disimpan?: number;
   bukti_bayar?: File;
   bukti_bayar_url?: string;
 }

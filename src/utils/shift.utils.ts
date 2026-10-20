@@ -4,13 +4,28 @@
 
 export type ShiftType = "pagi" | "siang" | "long_shift";
 
-export const SHIFT_CONFIG: Record<ShiftType, { label: string }> = {
-  pagi: { label: "Shift Pagi" },
-  siang: { label: "Shift Siang" },
-  long_shift: { label: "Long Shift" },
-};
-
 export const TIMEZONE_WIB = "Asia/Jakarta";
+
+/**
+ * Short label for shift (e.g. "Pagi", "Siang", "Long Shift")
+ */
+export function formatShiftLabel(shift?: string | null): string {
+  if (!shift) return "";
+  const s = shift.toLowerCase().trim();
+  if (s === "pagi") return "Pagi";
+  if (s === "siang") return "Siang";
+  if (s === "long_shift" || s === "long" || s === "long shift") return "Long Shift";
+  return shift;
+}
+
+/**
+ * Full descriptive label for shift (e.g. "Shift Pagi", "Shift Siang", "Long Shift")
+ */
+export function formatShiftName(shift?: string | null): string {
+  const label = formatShiftLabel(shift);
+  if (!label || label === "Long Shift") return label;
+  return `Shift ${label}`;
+}
 
 export function getJakartaDateString(date?: Date | string | number): string {
   if (!date) {

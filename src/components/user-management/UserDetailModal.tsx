@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { UserModel } from "@/types/user";
-import { formatJakartaDate, formatJakartaTime, formatLapakShiftHours } from "@/utils/shift.utils";
+import { formatJakartaDate, formatJakartaTime, formatLapakShiftHours, formatShiftName } from "@/utils/shift.utils";
 import { LapakModel } from "@/types/slp";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
@@ -64,11 +64,7 @@ export function UserDetailModal({
     if (!user.shift) return "Belum Diatur";
     const hours = formatLapakShiftHours(user.shift, lapak);
     const bracket = hours ? ` (${hours})` : "";
-    const s = user.shift.toLowerCase().trim();
-    if (s === "pagi") return `Shift Pagi${bracket}`;
-    if (s === "siang") return `Shift Siang${bracket}`;
-    if (s === "long_shift" || s === "long" || s === "long shift") return `Long Shift${bracket}`;
-    return `${user.shift}${bracket}`;
+    return `${formatShiftName(user.shift)}${bracket}`;
   })();
 
   const formattedCreatedAt = user.createdAt

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { LapakModel } from "@/types/slp";
-import { resolveCurrentActiveShift } from "@/utils/shift.utils";
+import { resolveCurrentActiveShift, formatShiftName } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
 import {
   Cancel01Icon,
@@ -167,7 +167,7 @@ export function LapakDetailModal({ lapak, isOpen, onClose }: LapakDetailModalPro
                     </div>
                     {u.shift && (
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                        Shift {u.shift}
+                        {formatShiftName(u.shift)}
                       </span>
                     )}
                   </div>

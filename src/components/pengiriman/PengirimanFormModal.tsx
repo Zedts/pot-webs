@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { pengirimanService } from "@/services/pengiriman.service";
+import { userService } from "@/services/user.service";
 import { LapakSimple, PengirimanModel } from "@/types/pengiriman";
+import { UserModel } from "@/types/user";
 import { apiClient } from "@/lib/api-client";
 import { ApiEndpoints } from "@/constants/api_endpoints";
 import { SearchableSelect, SelectOption } from "@/components/ui/SearchableSelect";
@@ -48,6 +50,8 @@ export function PengirimanFormModal({
 
   const [tanggal, setTanggal] = useState("");
   const [selectedLapakId, setSelectedLapakId] = useState("");
+  const [selectedPengirimId, setSelectedPengirimId] = useState("");
+  const [userList, setUserList] = useState<UserModel[]>([]);
   const [productItems, setProductItems] = useState<ProductRowItem[]>([]);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"select" | "edit">("select");
@@ -55,9 +59,15 @@ export function PengirimanFormModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      isInitializedRef.current = false;
+      return;
+    }
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
 
     async function init() {
       setIsLoading(true);
@@ -65,7 +75,13 @@ export function PengirimanFormModal({
       setTanggal(getJakartaDateString());
 
       try {
-        const products = await pengirimanService.getActiveProducts();
+        const [products, users] = await Promise.all([
+          pengirimanService.getActiveProducts(),
+          userService.getAllUsers().catch(() => []),
+        ]);
+
+        setUserList(users);
+
         const baseRows: ProductRowItem[] = products.map((p) => ({
           produk_id: p.id,
           nama: p.nama,
@@ -78,6 +94,7 @@ export function PengirimanFormModal({
         if (isEdit && editId) {
           const detail = await pengirimanService.getPengirimanById(editId);
           setSelectedLapakId(detail.lapak_id || "");
+          setSelectedPengirimId(detail.pengirim_id || detail.pengirim?.id || "");
           if (detail.tanggal) {
             setTanggal(getJakartaDateString(new Date(detail.tanggal)));
           }
@@ -99,6 +116,7 @@ export function PengirimanFormModal({
           setProductItems(baseRows);
           setSelectedProductIds(new Set());
           setSelectedLapakId(lapakList[0]?.id || "");
+          setSelectedPengirimId("");
           setViewMode("select");
         }
       } catch (err: unknown) {
@@ -117,6 +135,15 @@ export function PengirimanFormModal({
     label: l.nama,
     sublabel: l.lokasi,
   }));
+
+  const pengirimOptions: SelectOption[] = useMemo(() => {
+    return userList.map((u) => ({
+      value: u.id,
+      label: u.nama,
+      sublabel: `${u.username ? `@${u.username}` : ""} ${u.role ? `• ${u.role}` : ""}`.trim(),
+      role: u.role,
+    }));
+  }, [userList]);
 
   const handleToggleSelect = (produkId: string) => {
     setSelectedProductIds((prev) => {
@@ -197,6 +224,10 @@ export function PengirimanFormModal({
       setError("Pilih salah satu outlet lapak tujuan.");
       return;
     }
+    if (!selectedPengirimId) {
+      setError("Pilih petugas pengirim.");
+      return;
+    }
 
     const itemsToSend = productItems
       .filter((i) => selectedProductIds.has(i.produk_id) && i.qty > 0)
@@ -219,12 +250,14 @@ export function PengirimanFormModal({
         await pengirimanService.updatePengiriman(editId, {
           tanggal: tanggalISO,
           lapak_id: selectedLapakId,
+          pengirim_id: selectedPengirimId,
         });
         showToast.success("Delivery Order berhasil diperbarui.");
       } else {
         await pengirimanService.createPengiriman({
           tanggal: tanggalISO,
           lapak_id: selectedLapakId,
+          pengirim_id: selectedPengirimId,
           items: itemsToSend,
         });
         showToast.success("Delivery Order berhasil dibuat dalam status Draft.");
@@ -277,8 +310,8 @@ export function PengirimanFormModal({
             </div>
           )}
 
-          {/* Lapak & Tanggal Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Lapak, Pengirim & Tanggal Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
                 Outlet Lapak Tujuan <span className="text-red-500">*</span>
@@ -289,6 +322,20 @@ export function PengirimanFormModal({
                 onChange={setSelectedLapakId}
                 placeholder="Pilih outlet lapak..."
                 searchPlaceholder="Cari outlet lapak..."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                Petugas Pengirim <span className="text-red-500">*</span>
+              </label>
+              <SearchableSelect
+                options={pengirimOptions}
+                value={selectedPengirimId}
+                onChange={setSelectedPengirimId}
+                placeholder="Pilih nama staf / SPG..."
+                searchPlaceholder="Cari user berdasarkan nama, username, atau role..."
                 required
               />
             </div>
