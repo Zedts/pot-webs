@@ -89,6 +89,7 @@ export interface StokLapakModel {
   stok_awal: number;
   stok_masuk: number;
   stok_terjual: number;
+  stok_transfer?: number;
   stok_akhir: number;
   lapak?: {
     id: string;
@@ -111,12 +112,14 @@ export interface CreateStokLapakPayload {
   stok_awal: number;
   stok_masuk?: number;
   stok_terjual?: number;
+  stok_transfer?: number;
 }
 
 export interface UpdateStokLapakPayload {
   stok_awal?: number;
   stok_masuk?: number;
   stok_terjual?: number;
+  stok_transfer?: number;
 }
 
 export interface ProdukModel {

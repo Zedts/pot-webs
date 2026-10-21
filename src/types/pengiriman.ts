@@ -58,6 +58,8 @@ export interface PengirimanModel {
   tanggal: string | null;
   lapak_id: string;
   lapak?: LapakSimple | null;
+  asal_lapak_id?: string | null;
+  asal_lapak?: LapakSimple | null;
   created_by: string;
   creator?: CreatorSimple | null;
   pengirim_id?: string | null;
@@ -66,6 +68,7 @@ export interface PengirimanModel {
   total_items: number;
   qty_kirim: number;
   items?: PengirimanDetailModel[];
+  ttd_pengirim_url?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -111,13 +114,18 @@ export interface CreatePengirimanPayload {
   lapak_id: string;
   pengirim_id: string;
   items: CreatePengirimanItem[];
+  asal_lapak_id?: string;
+  ttd_pengirim?: File | Blob;
 }
 
 export interface UpdatePengirimanPayload {
   tanggal?: string;
   lapak_id?: string;
+  asal_lapak_id?: string | null;
   pengirim_id?: string;
   status?: PengirimanStatus;
+  items?: CreatePengirimanItem[];
+  ttd_pengirim?: File | Blob;
 }
 
 export interface PengirimanSummary {
@@ -137,6 +145,8 @@ export interface PengirimanTableRow {
   uniqueId: string;
   lapakNama: string;
   lapakId: string;
+  asalLapakId?: string | null;
+  asalLapakNama?: string | null;
   pengirimNama?: string;
   penerimaSpg: string;
   penerimaUsername?: string;
@@ -147,4 +157,5 @@ export interface PengirimanTableRow {
   status: PengirimanStatus;
   statusPenerimaan?: PenerimaanStatus | null;
   tanggalRaw: string | null;
+  ttdPengirimUrl?: string | null;
 }

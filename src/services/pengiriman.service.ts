@@ -205,16 +205,19 @@ export class PengirimanService {
         uniqueId: p.unique_id || `#PG-${p.id.slice(-6).toUpperCase()}`,
         lapakNama: lapak?.nama || "Lapak Tidak Ditemukan",
         lapakId: p.lapak_id,
+        asalLapakId: p.asal_lapak_id || null,
+        asalLapakNama: p.asal_lapak?.nama || (p.asal_lapak_id ? lapakMap.get(p.asal_lapak_id)?.nama : null) || null,
         pengirimNama: p.pengirim?.nama || p.creator?.nama || "-",
         penerimaSpg: receiver.nama,
         penerimaUsername: receiver.username,
         penerimaNoHp: receiver.no_hp,
-        waktuKirim: formatJakartaTime(p.createdAt || rawDate),
+        waktuKirim: formatJakartaTime(rawDate),
         totalItems: p.total_items || 0,
         qtyKirim: p.qty_kirim || 0,
         status: p.status,
         statusPenerimaan: receipt?.status || null,
-        tanggalRaw: p.createdAt || rawDate || null,
+        tanggalRaw: rawDate || null,
+        ttdPengirimUrl: p.ttd_pengirim_url || null,
       };
 
       rows.push(row);
@@ -331,11 +334,29 @@ export class PengirimanService {
    * Creates a new shipment atomically with line items
    */
   async createPengiriman(
-    payload: CreatePengirimanPayload
+    payload: CreatePengirimanPayload | FormData
   ): Promise<PengirimanModel> {
+    let body: unknown = payload;
+
+    if (typeof FormData !== "undefined" && payload instanceof FormData) {
+      body = payload;
+    } else {
+      const p = payload as CreatePengirimanPayload;
+      if (p.ttd_pengirim) {
+        const formData = new FormData();
+        formData.append("lapak_id", p.lapak_id);
+        formData.append("pengirim_id", p.pengirim_id);
+        if (p.tanggal) formData.append("tanggal", p.tanggal);
+        if (p.asal_lapak_id) formData.append("asal_lapak_id", p.asal_lapak_id);
+        formData.append("items", JSON.stringify(p.items));
+        formData.append("ttd_pengirim", p.ttd_pengirim, "ttd_pengirim.png");
+        body = formData;
+      }
+    }
+
     const res = await apiClient.post<PengirimanModel>(
       ApiEndpoints.pengiriman,
-      payload,
+      body,
       { requiresAuth: true }
     );
     if (!res.data) {
@@ -345,15 +366,34 @@ export class PengirimanService {
   }
 
   /**
-   * Updates shipment metadata (lapak_id, tanggal, status)
+   * Updates shipment metadata (lapak_id, tanggal, status, ttd_pengirim)
    */
   async updatePengiriman(
     id: string,
-    payload: UpdatePengirimanPayload
+    payload: UpdatePengirimanPayload | FormData
   ): Promise<PengirimanModel> {
+    let body: unknown = payload;
+
+    if (typeof FormData !== "undefined" && payload instanceof FormData) {
+      body = payload;
+    } else {
+      const p = payload as UpdatePengirimanPayload;
+      if (p.ttd_pengirim) {
+        const formData = new FormData();
+        if (p.tanggal) formData.append("tanggal", p.tanggal);
+        if (p.lapak_id) formData.append("lapak_id", p.lapak_id);
+        if (p.asal_lapak_id !== undefined) formData.append("asal_lapak_id", p.asal_lapak_id || "");
+        if (p.pengirim_id) formData.append("pengirim_id", p.pengirim_id);
+        if (p.status) formData.append("status", p.status);
+        if (p.items) formData.append("items", JSON.stringify(p.items));
+        formData.append("ttd_pengirim", p.ttd_pengirim, "ttd_pengirim.png");
+        body = formData;
+      }
+    }
+
     const res = await apiClient.put<PengirimanModel>(
       `${ApiEndpoints.pengiriman}/${id}`,
-      payload,
+      body,
       { requiresAuth: true }
     );
     if (!res.data) {

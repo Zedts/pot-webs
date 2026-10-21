@@ -177,6 +177,7 @@ export function StokLapakTabContent({
                 <th scope="col" className="px-5 py-3.5 text-center">Stok Awal</th>
                 <th scope="col" className="px-5 py-3.5 text-center">Masuk</th>
                 <th scope="col" className="px-5 py-3.5 text-center">Terjual</th>
+                <th scope="col" className="px-5 py-3.5 text-center">Transfer</th>
                 <th scope="col" className="px-5 py-3.5 text-center">Stok Akhir</th>
                 <th scope="col" className="px-5 py-3.5 text-center">Status</th>
                 {canManage && <th scope="col" className="px-5 py-3.5 text-right">Aksi</th>}
@@ -193,6 +194,7 @@ export function StokLapakTabContent({
                     <td className="px-5 py-4 text-center"><div className="h-4 bg-slate-100 rounded w-10 mx-auto" /></td>
                     <td className="px-5 py-4 text-center"><div className="h-4 bg-slate-100 rounded w-10 mx-auto" /></td>
                     <td className="px-5 py-4 text-center"><div className="h-4 bg-slate-100 rounded w-10 mx-auto" /></td>
+                    <td className="px-5 py-4 text-center"><div className="h-4 bg-slate-100 rounded w-10 mx-auto" /></td>
                     <td className="px-5 py-4 text-center"><div className="h-4 bg-slate-200 rounded w-12 mx-auto" /></td>
                     <td className="px-5 py-4 text-center"><div className="h-6 bg-slate-200 rounded-full w-20 mx-auto" /></td>
                     {canManage && <td className="px-5 py-4 text-right"><div className="h-8 bg-slate-200 rounded-xl w-20 ml-auto" /></td>}
@@ -200,7 +202,7 @@ export function StokLapakTabContent({
                 ))
               ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={canManage ? 9 : 8} className="py-12 text-center text-slate-400">
+                  <td colSpan={canManage ? 10 : 9} className="py-12 text-center text-slate-400">
                     Tidak ada pencatatan stok yang sesuai filter pencarian.
                   </td>
                 </tr>
@@ -247,6 +249,11 @@ export function StokLapakTabContent({
                       {/* Terjual */}
                       <td className="px-5 py-4 text-center font-mono text-xs text-amber-600 font-semibold">
                         -{row.stok_terjual ?? 0}
+                      </td>
+
+                      {/* Transfer */}
+                      <td className="px-5 py-4 text-center font-mono text-xs text-rose-600 font-semibold">
+                        -{row.stok_transfer ?? 0}
                       </td>
 
                       {/* Stok Akhir */}

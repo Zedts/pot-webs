@@ -67,6 +67,7 @@ export function PengirimanTable({
         r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.uniqueId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.lapakNama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.asalLapakNama && r.asalLapakNama.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (r.pengirimNama && r.pengirimNama.toLowerCase().includes(searchTerm.toLowerCase())) ||
         r.penerimaSpg.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -196,7 +197,20 @@ export function PengirimanTable({
                       {r.uniqueId}
                     </td>
                     <td className="px-5 py-4 font-medium text-slate-800">
-                      {r.lapakNama}
+                      {r.asalLapakNama || r.asalLapakId ? (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                            <span>{r.asalLapakNama || r.asalLapakId}</span>
+                            <span className="text-slate-400 font-normal">&rarr;</span>
+                            <span>{r.lapakNama}</span>
+                          </div>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                            Transfer
+                          </span>
+                        </div>
+                      ) : (
+                        <span>{r.lapakNama}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-xs">
                       <div className="flex flex-col">

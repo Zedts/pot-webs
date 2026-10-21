@@ -221,6 +221,18 @@ export class SlpService {
     await apiClient.delete(`${ApiEndpoints.stokLapak}/${id}`, { requiresAuth: true });
   }
 
+  /**
+   * Retrieve stock inventory records for a specific stall
+   */
+  async getStokByLapakId(lapakId: string): Promise<StokLapakModel[]> {
+    if (!lapakId) return [];
+    const res = await apiClient.get<StokLapakModel[]>(
+      `${ApiEndpoints.stokLapak}?lapak_id=${encodeURIComponent(lapakId)}`,
+      { requiresAuth: true }
+    );
+    return Array.isArray(res.data) ? res.data : [];
+  }
+
   // ==========================================
   // Produk CRUD Operations
   // ==========================================

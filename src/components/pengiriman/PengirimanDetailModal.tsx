@@ -6,7 +6,9 @@ import { PengirimanModel, PenerimaanModel } from "@/types/pengiriman";
 import { PengirimanStatusBadge } from "./PengirimanStatusBadge";
 import { formatJakartaDateTime, formatRupiah } from "@/utils/shift.utils";
 import { HugeIcon } from "@/components/ui/HugeIcon";
-import { Cancel01Icon, DeliveryTruck01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, DeliveryTruck01Icon, Invoice03Icon } from "@hugeicons/core-free-icons";
+import { generateNotaPengirimanPdf } from "@/utils/notaPdf.utils";
+import { showToast } from "@/lib/toast";
 
 interface PengirimanDetailModalProps {
   pengirimanId: string | null;
@@ -23,33 +25,54 @@ export function PengirimanDetailModal({
   const [penerimaan, setPenerimaan] = useState<PenerimaanModel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  async function handleDownloadPdf() {
+    if (!data) return;
+    setIsGeneratingPdf(true);
+    try {
+      await generateNotaPengirimanPdf(data, penerimaan);
+      showToast.success("Nota DO berhasil diunduh.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal mengunduh nota PDF.";
+      showToast.error(msg);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }
 
   useEffect(() => {
-    if (!pengirimanId) {
-      setData(null);
-      setPenerimaan(null);
-      return;
-    }
+    if (!pengirimanId) return;
 
-    async function fetchDetail() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [pengirimanData, penerimaanData] = await Promise.all([
-          pengirimanService.getPengirimanById(pengirimanId!),
-          pengirimanService.getPenerimaanByPengirimanId(pengirimanId!),
-        ]);
+    let isMounted = true;
+    queueMicrotask(() => {
+      if (isMounted) {
+        setIsLoading(true);
+        setError(null);
+      }
+    });
+
+    Promise.all([
+      pengirimanService.getPengirimanById(pengirimanId),
+      pengirimanService.getPenerimaanByPengirimanId(pengirimanId),
+    ])
+      .then(([pengirimanData, penerimaanData]) => {
+        if (!isMounted) return;
         setData(pengirimanData);
         setPenerimaan(penerimaanData);
-      } catch (err: unknown) {
+      })
+      .catch((err: unknown) => {
+        if (!isMounted) return;
         const msg = err instanceof Error ? err.message : "Gagal memuat detail pengiriman.";
         setError(msg);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
 
-    fetchDetail();
+    return () => {
+      isMounted = false;
+    };
   }, [pengirimanId]);
 
   if (!pengirimanId) return null;
@@ -92,6 +115,18 @@ export function PengirimanDetailModal({
             </div>
           ) : data ? (
             <>
+              {/* Transfer Indicator Banner if DO is a stall transfer */}
+              {data.asal_lapak && (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-indigo-600 text-white rounded-md text-[10px] font-bold uppercase tracking-wider">
+                    Transfer Antar Lapak
+                  </span>
+                  <span className="text-indigo-950 font-medium">
+                    Asal: <strong className="font-bold">{data.asal_lapak.nama}</strong> &rarr; Tujuan: <strong className="font-bold">{data.lapak?.nama || "-"}</strong>
+                  </span>
+                </div>
+              )}
+
               {/* Top Details Card */}
               <div className="p-4 bg-slate-50 border border-slate-200/70 rounded-2xl grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                 <div>
@@ -223,13 +258,34 @@ export function PengirimanDetailModal({
                   )}
                 </div>
               )}
+
+              {/* Digital Signature Card */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  Tanda Tangan Petugas Pengirim
+                </span>
+                {data.ttd_pengirim_url ? (
+                  <div className="bg-white border border-slate-200 rounded-xl p-3 inline-block shadow-inner">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={data.ttd_pengirim_url}
+                      alt="Tanda Tangan Pengirim"
+                      className="h-20 max-w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">
+                    Belum ada tanda tangan petugas pengirim yang dilampirkan pada dokumen ini.
+                  </p>
+                )}
+              </div>
             </>
           ) : null}
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             {data?.status === "draft" && onEdit && (
               <button
                 type="button"
@@ -240,6 +296,17 @@ export function PengirimanDetailModal({
                 className="px-4 py-2 text-xs font-semibold text-[#18314E] bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Edit Dokumen DO
+              </button>
+            )}
+            {data && (
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="px-4 py-2 text-xs font-semibold text-white bg-[#18314E] hover:bg-[#12243A] rounded-xl shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <HugeIcon icon={Invoice03Icon} size={15} />
+                <span>{isGeneratingPdf ? "Menyiapkan PDF..." : "Cetak Nota (PDF)"}</span>
               </button>
             )}
           </div>

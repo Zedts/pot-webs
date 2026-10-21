@@ -42,6 +42,7 @@ export function StokLapakFormModal({
   const [stokAwal, setStokAwal] = useState<number>(0);
   const [stokMasuk, setStokMasuk] = useState<number>(0);
   const [stokTerjual, setStokTerjual] = useState<number>(0);
+  const [stokTransfer, setStokTransfer] = useState<number>(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,19 +54,21 @@ export function StokLapakFormModal({
       setStokAwal(initialData.stok_awal ?? 0);
       setStokMasuk(initialData.stok_masuk ?? 0);
       setStokTerjual(initialData.stok_terjual ?? 0);
+      setStokTransfer(initialData.stok_transfer ?? 0);
     } else {
       setLapakId(lapakList[0]?.id || "");
       setProdukId(produkList[0]?.id || "");
       setStokAwal(0);
       setStokMasuk(0);
       setStokTerjual(0);
+      setStokTransfer(0);
     }
     setError(null);
   }, [initialData, isOpen, lapakList, produkList]);
 
   if (!isOpen) return null;
 
-  const stokAkhirCalculated = Number(stokAwal) + Number(stokMasuk) - Number(stokTerjual);
+  const stokAkhirCalculated = Number(stokAwal) + Number(stokMasuk) - Number(stokTerjual) - Number(stokTransfer);
 
   // Options for Lapak & Produk
   const lapakOptions: SelectOption[] = lapakList.map((l) => ({
@@ -92,7 +95,7 @@ export function StokLapakFormModal({
       setError("Pilih salah satu varian produk.");
       return;
     }
-    if (stokAwal < 0 || stokMasuk < 0 || stokTerjual < 0) {
+    if (stokAwal < 0 || stokMasuk < 0 || stokTerjual < 0 || stokTransfer < 0) {
       setError("Kuantitas stok tidak boleh berupa angka negatif.");
       return;
     }
@@ -111,6 +114,7 @@ export function StokLapakFormModal({
             stok_awal: Number(stokAwal),
             stok_masuk: 0,
             stok_terjual: 0,
+            stok_transfer: 0,
           };
 
       if (onSubmit) {
@@ -253,6 +257,21 @@ export function StokLapakFormModal({
                     className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-[#18314E]/20 focus:border-[#18314E]"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wider flex items-center justify-between">
+                    <span>Transfer (-)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Otomatis DO</span>
+                  </label>
+                  <input
+                    type="number"
+                    readOnly
+                    disabled
+                    value={stokTransfer}
+                    title="Kuantitas transfer stok dikelola otomatis oleh sistem pengiriman antar lapak (DO) dan tidak dapat diubah manual."
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 bg-slate-100 text-slate-500 rounded-xl font-mono cursor-not-allowed select-none"
+                  />
+                </div>
               </>
             )}
           </div>
@@ -264,7 +283,7 @@ export function StokLapakFormModal({
                 Estimasi Saldo Stok Akhir
               </span>
               <span className="text-[11px] text-slate-500">
-                Formula: Awal ({stokAwal}) + Masuk ({stokMasuk}) - Terjual ({stokTerjual})
+                Formula: Awal ({stokAwal}) + Masuk ({stokMasuk}) - Terjual ({stokTerjual}) - Transfer ({stokTransfer})
               </span>
             </div>
             <div className="text-right">

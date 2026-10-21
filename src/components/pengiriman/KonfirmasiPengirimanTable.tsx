@@ -132,7 +132,20 @@ export function KonfirmasiPengirimanTable({
 
                   {/* Lapak */}
                   <td className="px-5 py-4 font-medium text-slate-800">
-                    {row.lapakNama}
+                    {row.asalLapakNama || row.asalLapakId ? (
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                          <span>{row.asalLapakNama || row.asalLapakId}</span>
+                          <span className="text-slate-400 font-normal">&rarr;</span>
+                          <span>{row.lapakNama}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase tracking-wider">
+                          Transfer
+                        </span>
+                      </div>
+                    ) : (
+                      <span>{row.lapakNama}</span>
+                    )}
                   </td>
 
                   {/* Pengirim & Penerima SPG */}
