@@ -27,9 +27,9 @@ export function PengirimanSummaryCards({
         isLoading={isLoading}
       />
 
-      {/* 2. Total Unit yang Dikirim */}
+      {/* 2. Total Unit yang Dikirim Hari Ini */}
       <MetricCard
-        title="Total Unit yang Dikirim"
+        title="Total Unit yang Dikirim Hari Ini"
         value={isLoading ? "-" : `${summary?.totalUnitKirim || 0} Unit`}
         subtext={isLoading ? undefined : `Dari ${summary?.totalVarian || 0} Varian Produk`}
         valueColor="text-[#18314E]"
