@@ -56,6 +56,7 @@ export interface DashboardSummary {
   totalPenjualan: number;
   totalPengiriman: number;
   spgAktifCount: number;
+  totalScheduledSpgCount: number;
   totalStallsCount: number;
   selisihStokCount: number;
 }
@@ -133,7 +134,6 @@ class DashboardService {
     const absensiByUsername = new Map<string, AbsensiModel>();
     const absensiByLapak = new Map<string, AbsensiModel>();
     const clockedInSpgIds = new Set<string>();
-    let spgAktifCount = 0;
 
     for (const a of absensiList) {
       if (a.user?.id) {
@@ -146,14 +146,6 @@ class DashboardService {
       const stallId = a.lapak?.id || a.lapak_id;
       if (stallId && !absensiByLapak.has(stallId)) {
         absensiByLapak.set(stallId, a);
-      }
-      const st = (a.status || "").toLowerCase();
-      const belongsToShift =
-        !activeShift || activeShift === "all"
-          ? true
-          : (a.shift_spg || "").toLowerCase() === activeShift;
-      if (belongsToShift && (st === "hadir" || st === "terlambat")) {
-        spgAktifCount++;
       }
     }
 
@@ -309,7 +301,22 @@ class DashboardService {
       return hasLapak && hasShift;
     });
 
-    // 9. Build status rows for each qualifying user
+    // 9. Compute scheduled staff belonging to activeShift and active attendance count
+    const scheduledUsersForShift = qualifyingUsers.filter((u) => {
+      if (!activeShift || activeShift === "all") return true;
+      const userShift = (u.shift || "").toLowerCase().trim();
+      return userShift === activeShift.toLowerCase().trim();
+    });
+
+    const spgAktifCount = scheduledUsersForShift.filter((u) => {
+      const attendance =
+        (u.id ? absensiByUserId.get(u.id) : undefined) ||
+        (u.username ? absensiByUsername.get(u.username.toLowerCase().trim()) : undefined);
+      const st = (attendance?.status || "").toLowerCase().trim();
+      return st === "hadir" || st === "terlambat";
+    }).length;
+
+    // 10. Build status rows for each qualifying user
     const rows: StatusLapakRow[] = qualifyingUsers.map((user) => {
       const lapak = lapakMap.get(String(user.lapak_id).trim())!;
 
@@ -370,6 +377,7 @@ class DashboardService {
         totalPenjualan: totalPenjualanActiveShift,
         totalPengiriman,
         spgAktifCount,
+        totalScheduledSpgCount: scheduledUsersForShift.length,
         totalStallsCount: lapakList.length,
         selisihStokCount: selisihStokLapakCount,
       },

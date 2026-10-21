@@ -158,7 +158,7 @@ export class PenjualanService {
       const price = Number(sale.total_harga || 0);
       todayRevenue += price;
 
-      const changeKept = Number(sale.kembalian_disimpan ?? sale.keep_changes ?? 0);
+      const changeKept = Number(sale.kembalian_disimpan || 0);
       if (changeKept > 0) {
         totalKembalianDisimpan += changeKept;
         kembalianDisimpanCount++;
@@ -228,7 +228,7 @@ export class PenjualanService {
         spgNoHp: s.spg?.no_hp,
         totalHarga: Number(s.total_harga || 0),
         totalItemsCount: totalItems,
-        kembalianDisimpan: Number(s.kembalian_disimpan ?? s.keep_changes ?? 0),
+        kembalianDisimpan: Number(s.kembalian_disimpan || 0),
         catatan: s.catatan || "",
         hasBukti: Boolean(s.bukti_bayar_url || s.bukti_qris_url),
         raw: s,

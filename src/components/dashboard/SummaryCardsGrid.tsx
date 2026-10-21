@@ -12,7 +12,8 @@ interface SummaryCardsGridProps {
 export function SummaryCardsGrid({ summary, isLoading }: SummaryCardsGridProps) {
   const totalPenjualanStr = formatRupiah(summary?.totalPenjualan ?? 0);
   const totalPengirimanStr = `${summary?.totalPengiriman ?? 0} Pengiriman`;
-  const spgRatioStr = `${summary?.spgAktifCount ?? 0}/${summary?.totalStallsCount ?? 0}`;
+  const totalScheduledSpg = summary?.totalScheduledSpgCount ?? summary?.totalStallsCount ?? 0;
+  const spgRatioStr = `${summary?.spgAktifCount ?? 0}/${totalScheduledSpg}`;
   const selisihCount = summary?.selisihStokCount ?? 0;
   const selisihStr = `${selisihCount} Lapak`;
 

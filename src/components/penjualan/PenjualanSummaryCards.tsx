@@ -55,7 +55,7 @@ export function PenjualanSummaryCards({
         isLoading={isLoading}
       />
 
-      {/* Card 3: Kembalian Disimpan (Keep Changes) */}
+      {/* Card 3: Kembalian Disimpan */}
       <MetricCard
         title="Kembalian Disimpan Hari Ini"
         value={

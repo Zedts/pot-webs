@@ -20,7 +20,6 @@ export interface PenjualanModel {
   bukti_bayar_url?: string | null;
   bukti_qris_url?: string | null;
   kembalian_disimpan?: number;
-  keep_changes?: number;
   catatan?: string;
   spg?: UserModel | null;
   spg_id?: string;

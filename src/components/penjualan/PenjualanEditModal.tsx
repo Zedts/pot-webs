@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { PenjualanModel, UpdatePenjualanPayload } from "@/types/penjualan";
 import { penjualanService } from "@/services/penjualan.service";
 import { showToast } from "@/lib/toast";
@@ -29,6 +29,8 @@ export function PenjualanEditModal({
   onSuccess,
 }: PenjualanEditModalProps) {
   const [metodePembayaran, setMetodePembayaran] = useState<string>("tunai");
+  const [customerCashInput, setCustomerCashInput] = useState<string>("");
+  const [isKembalianDisimpan, setIsKembalianDisimpan] = useState<boolean>(false);
   const [catatan, setCatatan] = useState<string>("");
   const [buktiFile, setBuktiFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -45,15 +47,52 @@ export function PenjualanEditModal({
   // Initialize form fields when modal opens
   useEffect(() => {
     if (sale && isOpen) {
-      setMetodePembayaran(
-        (sale.metode_pembayaran || "tunai").toLowerCase().trim()
-      );
+      const normalizedMetode = (sale.metode_pembayaran || "tunai").toLowerCase().trim();
+      const isTunaiInit = normalizedMetode === "tunai";
+      setMetodePembayaran(normalizedMetode);
       setCatatan(sale.catatan || "");
       setBuktiFile(null);
       setPreviewUrl(sale.bukti_bayar_url || sale.bukti_qris_url || null);
       setErrorMessage(null);
+
+      const existingKembalian = Number(sale.kembalian_disimpan || 0);
+      if (isTunaiInit) {
+        setIsKembalianDisimpan(existingKembalian > 0);
+        const initialCash = Number(sale.total_harga || 0) + existingKembalian;
+        setCustomerCashInput(initialCash > 0 ? initialCash.toLocaleString("id-ID") : "");
+      } else {
+        setIsKembalianDisimpan(false);
+        setCustomerCashInput("");
+      }
     }
   }, [sale, isOpen]);
+
+  const isTunai = metodePembayaran === "tunai";
+
+  const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.replace(/[^0-9]/g, "");
+    if (!rawVal) {
+      setCustomerCashInput("");
+      return;
+    }
+    const num = parseInt(rawVal, 10);
+    setCustomerCashInput(num.toLocaleString("id-ID"));
+  };
+
+  const numericCustomerCash = parseInt(customerCashInput.replace(/[^0-9]/g, ""), 10) || 0;
+
+  const calculatedKembalian = useMemo(() => {
+    if (!isTunai || numericCustomerCash <= 0) return 0;
+    const diff = numericCustomerCash - (sale?.total_harga || 0);
+    return diff > 0 ? diff : 0;
+  }, [isTunai, numericCustomerCash, sale?.total_harga]);
+
+  const handleMetodeChange = (val: string) => {
+    setMetodePembayaran(val);
+    if (val !== "tunai") {
+      setIsKembalianDisimpan(false);
+    }
+  };
 
   // Clean up object URLs on unmount / change
   useEffect(() => {
@@ -101,10 +140,20 @@ export function PenjualanEditModal({
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    // Validation Guard: Cash received must not be less than transaction total
+    if (isTunai && numericCustomerCash > 0 && numericCustomerCash < sale.total_harga) {
+      const msg = `Uang diterima tidak boleh kurang dari total transaksi (${formatRupiah(sale.total_harga)}).`;
+      setErrorMessage(msg);
+      showToast.error(msg);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const payload: UpdatePenjualanPayload = {
         metode_pembayaran: metodePembayaran,
         catatan: catatan.trim(),
+        kembalian_disimpan: isTunai && isKembalianDisimpan ? calculatedKembalian : 0,
       };
 
       if (buktiFile) {
@@ -218,10 +267,83 @@ export function PenjualanEditModal({
             <SearchableSelect
               options={metodeOptions}
               value={metodePembayaran}
-              onChange={(val) => setMetodePembayaran(val)}
+              onChange={handleMetodeChange}
               placeholder="Pilih Metode Pembayaran"
             />
           </div>
+
+          {/* Cash Payment Section (Only for Tunai) */}
+          {isTunai && (
+            <div className="space-y-3 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl animate-fadeIn">
+              {/* Cash Input with Live Rupiah Formatter */}
+              <div>
+                <label className="block text-xs font-bold text-[#18314E] uppercase tracking-wider mb-1.5">
+                  Uang Diterima (Tunai)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">
+                    Rp
+                  </span>
+                  <input
+                    type="text"
+                    value={customerCashInput}
+                    onChange={handleCashChange}
+                    placeholder="0"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#18314E]/20 focus:border-[#18314E] text-slate-800 font-mono font-semibold transition-all"
+                  />
+                </div>
+                <span className="text-[10px] text-slate-400 block mt-1">
+                  Masukkan nominal uang tunai yang diterima dari pelanggan
+                </span>
+              </div>
+
+              {/* Kembalian Display Row */}
+              <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200/60 rounded-xl">
+                <span className="text-xs font-semibold text-slate-600">
+                  Kembalian:
+                </span>
+                <span
+                  className={`font-mono text-xs font-bold ${
+                    calculatedKembalian > 0 ? "text-rose-600" : "text-slate-400"
+                  }`}
+                >
+                  {formatRupiah(calculatedKembalian)}
+                </span>
+              </div>
+
+              {/* Simpan Kembalian Toggle Switch */}
+              {calculatedKembalian > 0 && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between gap-3 animate-fadeIn">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-amber-950 block">
+                      Simpan Kembalian ke Pembukuan
+                    </span>
+                    <span className="text-[11px] text-amber-800/90 block mt-0.5 leading-snug">
+                      {isKembalianDisimpan
+                        ? `Kembalian sebesar ${formatRupiah(calculatedKembalian)} dicatat sebagai kas tersimpan`
+                        : "Kembalian diberikan langsung kepada pelanggan"}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isKembalianDisimpan}
+                    onClick={() => setIsKembalianDisimpan(!isKembalianDisimpan)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#18314E]/20 ${
+                      isKembalianDisimpan ? "bg-[#18314E]" : "bg-slate-300"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        isKembalianDisimpan ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Form Field 2: Catatan Transaksi */}
           <div>
